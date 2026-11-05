@@ -717,7 +717,10 @@ class AdminApi
 
         // Scans run asynchronously — this endpoint returns instantly with a
         // scan_id; poll GET /admin/geo-scan/{id} for status and the report.
-        $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, ['source' => 'admin']);
+        $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, [
+            'source'  => 'admin',
+            'user_id' => get_current_user_id(),
+        ]);
         $this->geoScanQueue->enqueue($scanId);
 
         return new \WP_REST_Response([

@@ -2149,6 +2149,7 @@ class ApiGateway
         $scanId = $this->geoScanRepository->insertQueued($url, $keywords, $language, [
             'source' => 'tenant',
             'name' => $tenantKey,
+            'tenant_key' => $tenantKey,
         ]);
         $this->geoScanQueue->enqueue($scanId);
 
@@ -2170,10 +2171,16 @@ class ApiGateway
             return new \WP_REST_Response(['success' => false, 'error' => 'geo_scan_not_configured'], 503);
         }
 
+        $tenantKey = (string) ($request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key'));
         $scanId = (int) $request->get_param('id');
         $scan = $this->geoScanRepository->getById($scanId);
 
-        if (!$scan) {
+        // A tenant may only read the scans it started itself.
+        if (!$scan
+            || ($scan['source'] ?? '') !== 'tenant'
+            || $tenantKey === ''
+            || !hash_equals((string) ($scan['tenant_key'] ?? ''), $tenantKey)
+        ) {
             return new \WP_REST_Response(['success' => false, 'error' => 'not_found'], 404);
         }
 
@@ -2201,7 +2208,8 @@ class ApiGateway
         }
 
         $limit = max(1, min(50, (int) ($request->get_param('limit') ?: 10)));
-        $scans = $this->geoScanRepository->getRecent($limit, 'tenant');
+        $tenantKey = (string) ($request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key'));
+        $scans = $tenantKey !== '' ? $this->geoScanRepository->getRecentForTenant($limit, $tenantKey) : [];
 
         return new \WP_REST_Response([
             'success' => true,

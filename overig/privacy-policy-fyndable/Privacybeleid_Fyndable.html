@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="nl" data-lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacybeleid / Privacy Policy - Fyndable Smart SEO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#8F39AC;
+    --blue:#379FD3;
+    --dark:#333333;
+    --light:#E6E7E8;
+    --grad: linear-gradient(135deg, var(--purple), var(--blue));
+    --sidebar-w: 300px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:'Outfit', sans-serif;
+    font-weight:300;
+    color:var(--dark);
+    background:#fff;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    position:fixed;
+    top:0; left:0; bottom:0;
+    width:var(--sidebar-w);
+    background:var(--grad);
+    color:#fff;
+    padding:32px 24px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .sidebar .brand-mark{
+    width:34px;height:34px;
+    border-radius:9px;
+    background:rgba(255,255,255,0.18);
+    display:flex;align-items:center;justify-content:center;
+    font-weight:600;font-size:16px;
+    flex-shrink:0;
+  }
+  .sidebar .brand-name{
+    font-weight:600;
+    font-size:17px;
+    letter-spacing:0.2px;
+  }
+  .sidebar .doc-label{
+    font-weight:300;
+    font-size:13px;
+    opacity:0.85;
+    margin:2px 0 28px 44px;
+  }
+  .sidebar nav{flex:1;}
+  .sidebar nav a{
+    display:block;
+    color:#fff;
+    text-decoration:none;
+    font-size:13.5px;
+    font-weight:300;
+    padding:9px 12px;
+    margin-bottom:2px;
+    border-radius:8px;
+    opacity:0.82;
+    transition:background 0.15s ease, opacity 0.15s ease, padding-left 0.15s ease;
+    line-height:1.35;
+  }
+  .sidebar nav a:hover{
+    background:rgba(255,255,255,0.14);
+    opacity:1;
+    padding-left:16px;
+  }
+  .sidebar nav a.active{
+    background:rgba(255,255,255,0.22);
+    opacity:1;
+    font-weight:400;
+  }
+  .sidebar nav a .num{
+    display:inline-block;
+    width:20px;
+    opacity:0.75;
+    font-variant-numeric:tabular-nums;
+  }
+  .sidebar .foot{
+    font-size:11.5px;
+    opacity:0.65;
+    margin-top:24px;
+    padding-top:16px;
+    border-top:1px solid rgba(255,255,255,0.25);
+  }
+
+  /* ---------- Content ---------- */
+  .content{
+    margin-left:var(--sidebar-w);
+    max-width:840px;
+    padding:56px 64px 120px 64px;
+  }
+  .doc-title{
+    font-weight:200;
+    font-size:40px;
+    color:var(--dark);
+    margin:0 0 4px 0;
+    letter-spacing:-0.5px;
+  }
+  .doc-subtitle{
+    font-weight:600;
+    font-size:17px;
+    background:var(--grad);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    margin:0 0 6px 0;
+  }
+  .doc-version{
+    font-size:13px;
+    font-style:italic;
+    color:#8a8a8a;
+    margin:0 0 28px 0;
+  }
+  .notice{
+    background:var(--light);
+    border-left:4px solid var(--purple);
+    border-radius:6px;
+    padding:16px 20px;
+    font-size:13.5px;
+    font-style:italic;
+    color:#4a4a4a;
+    line-height:1.6;
+    margin-bottom:48px;
+  }
+
+  article{
+    margin-bottom:44px;
+    scroll-margin-top:40px;
+  }
+  article.highlight{
+    background:linear-gradient(180deg, rgba(143,57,172,0.04), rgba(55,159,211,0.04));
+    border:1px solid rgba(143,57,172,0.15);
+    border-radius:12px;
+    padding:28px 32px;
+    margin-left:-32px;
+    margin-right:-32px;
+  }
+  h2{
+    font-weight:500;
+    font-size:22px;
+    color:var(--dark);
+    margin:0 0 18px 0;
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  h2 .art-num{
+    font-weight:600;
+    font-size:14px;
+    color:#fff;
+    background:var(--grad);
+    padding:3px 10px;
+    border-radius:20px;
+    letter-spacing:0.3px;
+  }
+  ol{
+    margin:0;
+    padding-left:0;
+    list-style:none;
+    counter-reset:item;
+  }
+  ol li{
+    counter-increment:item;
+    position:relative;
+    padding-left:34px;
+    margin-bottom:14px;
+    font-size:15px;
+    line-height:1.7;
+    font-weight:300;
+    color:#3d3d3d;
+  }
+  ol li::before{
+    content: counter(item, lower-alpha) ".";
+    position:absolute;
+    left:0;
+    top:0;
+    font-weight:500;
+    color:var(--blue);
+  }
+  strong.term{
+    font-weight:500;
+    color:var(--dark);
+  }
+  table.data-table{
+    width:100%;
+    border-collapse:collapse;
+    margin:10px 0 22px 0;
+    font-size:14px;
+  }
+  table.data-table th, table.data-table td{
+    text-align:left;
+    padding:10px 12px;
+    border-bottom:1px solid var(--light);
+    vertical-align:top;
+  }
+  table.data-table th{
+    font-weight:500;
+    color:var(--dark);
+    background:rgba(143,57,172,0.05);
+  }
+  table.data-table td{
+    font-weight:300;
+    color:#3d3d3d;
+  }
+
+  footer.doc-footer{
+    margin-top:80px;
+    padding-top:24px;
+    border-top:1px solid var(--light);
+    font-size:12.5px;
+    color:#9a9a9a;
+  }
+
+  .sidebar .brand-logo{
+    display:block;
+    width:100%;
+    max-width:240px;
+    height:auto;
+    margin:0 0 28px 0;
+    padding:10px 14px;
+    background:#fff;
+    box-shadow:0 4px 14px rgba(0,0,0,0.12);
+    border-radius:12px;
+    box-sizing:border-box;
+  }
+  .doc-logo{
+    display:none;
+  }
+  @media print{
+    .sidebar, .lang-switch{display:none !important;}
+    .content{margin-left:0;padding:0;}
+    .doc-logo{display:block;height:44px;width:auto;margin:0 0 28px 0;}
+  }
+
+  /* ---------- Language switch ---------- */
+  html[data-lang="nl"] [data-lang="en"],
+  html[data-lang="en"] [data-lang="nl"]{display:none !important;}
+  .lang-switch{
+    position:fixed;
+    top:16px; right:20px;
+    z-index:10;
+    display:flex;
+    gap:2px;
+    padding:3px;
+    background:#fff;
+    border:1px solid var(--light);
+    border-radius:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.06);
+  }
+  .lang-switch button{
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:500;
+    letter-spacing:0.4px;
+    color:var(--dark);
+    background:transparent;
+    border:0;
+    border-radius:16px;
+    padding:5px 12px;
+    cursor:pointer;
+  }
+  .lang-switch button[aria-pressed="true"]{
+    background:var(--grad);
+    color:#fff;
+  }
+
+  @media (max-width: 860px){
+    .sidebar{
+      position:relative;
+      width:100%;
+      height:auto;
+    }
+    .content{
+      margin-left:0;
+      padding:40px 24px 80px 24px;
+    }
+    article.highlight{
+      margin-left:0;
+      margin-right:0;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <img class="brand-logo" src="logo_long_black.png" alt="Fyndable Smart SEO">
+
+  <nav class="toc" data-lang="nl">
+    <a href="#artikel-1"><span class="num">01</span>Definities</a>
+    <a href="#artikel-2"><span class="num">02</span>Wie is verantwoordelijk</a>
+    <a href="#artikel-3"><span class="num">03</span>Voor wie geldt dit beleid</a>
+    <a href="#artikel-4"><span class="num">04</span>Account- en factuurgegevens</a>
+    <a href="#artikel-5"><span class="num">05</span>Betaalgegevens</a>
+    <a href="#artikel-6"><span class="num">06</span>Koppeling met Google-diensten</a>
+    <a href="#artikel-7"><span class="num">07</span>AI-content en SEO/SERP-data</a>
+    <a href="#artikel-8"><span class="num">08</span>Optionele koppelingen</a>
+    <a href="#artikel-9"><span class="num">09</span>Fyndable voor Shopify</a>
+    <a href="#artikel-10"><span class="num">10</span>GEO-scan op de website</a>
+    <a href="#artikel-11"><span class="num">11</span>Support, chat en rapportages</a>
+    <a href="#artikel-12"><span class="num">12</span>Cookies en vergelijkbare technieken</a>
+    <a href="#artikel-13"><span class="num">13</span>Grondslagen voor verwerking</a>
+    <a href="#artikel-14"><span class="num">14</span>Doorgifte buiten de EER</a>
+    <a href="#artikel-15"><span class="num">15</span>Bewaartermijnen</a>
+    <a href="#artikel-16"><span class="num">16</span>Beveiliging</a>
+    <a href="#artikel-17"><span class="num">17</span>Uw rechten</a>
+    <a href="#artikel-18"><span class="num">18</span>Wijzigingen en contact</a>
+  </nav>
+  <nav class="toc" data-lang="en">
+    <a href="#article-1"><span class="num">01</span>Definitions</a>
+    <a href="#article-2"><span class="num">02</span>Who is responsible</a>
+    <a href="#article-3"><span class="num">03</span>Who this policy applies to</a>
+    <a href="#article-4"><span class="num">04</span>Account and billing data</a>
+    <a href="#article-5"><span class="num">05</span>Payment data</a>
+    <a href="#article-6"><span class="num">06</span>Connection with Google services</a>
+    <a href="#article-7"><span class="num">07</span>AI content and SEO/SERP data</a>
+    <a href="#article-8"><span class="num">08</span>Optional integrations</a>
+    <a href="#article-9"><span class="num">09</span>Fyndable for Shopify</a>
+    <a href="#article-10"><span class="num">10</span>GEO scan on the website</a>
+    <a href="#article-11"><span class="num">11</span>Support, chat and reports</a>
+    <a href="#article-12"><span class="num">12</span>Cookies and similar technologies</a>
+    <a href="#article-13"><span class="num">13</span>Legal bases for processing</a>
+    <a href="#article-14"><span class="num">14</span>Transfers outside the EEA</a>
+    <a href="#article-15"><span class="num">15</span>Retention periods</a>
+    <a href="#article-16"><span class="num">16</span>Security</a>
+    <a href="#article-17"><span class="num">17</span>Your rights</a>
+    <a href="#article-18"><span class="num">18</span>Changes and contact</a>
+  </nav>
+
+  <div class="foot" data-lang="nl">Versie: 2<br>Laatst gewijzigd op 5 november 2026</div>
+  <div class="foot" data-lang="en">Version: 2<br>Last modified on 5 November 2026</div>
+</div>
+
+<div class="lang-switch" role="group" aria-label="Taal / Language">
+  <button type="button" data-set-lang="nl" aria-pressed="true">NL</button>
+  <button type="button" data-set-lang="en" aria-pressed="false">EN</button>
+</div>
+
+<div class="content">
+  <img class="doc-logo" src="logo_long_black.png" alt="Fyndable Smart SEO">
+  <div data-lang="nl" lang="nl">
+  <h1 class="doc-title">Privacybeleid</h1>
+  <div class="doc-subtitle">Fyndable Smart SEO</div>
+  <div class="doc-version">Versie: 2 - Laatst gewijzigd op 5 november 2026</div>
+
+  
+
+  <article id="artikel-1">
+    <h2><span class="art-num">Art. 1</span>Definities</h2>
+    <ol>
+      <li><strong class="term">Fyndable Smart SEO</strong> / "wij", "ons", "Fyndable": gevestigd te Hoogland, Nederland, ingeschreven bij de Kamer van Koophandel onder nummer 42118746, de aanbieder van de website, het dashboard en de WordPress-plug-ins van Fyndable Smart SEO.</li>
+      <li><strong class="term">Website/Dienst</strong>: de website fyndable.ai, het bijbehorende SaaS-dashboard, de WordPress-plug-ins ("Fyndable Client" en "Fyndable SaaS Dashboard") en de Shopify-app "Fyndable Smart SEO" die Fyndable aanbiedt.</li>
+      <li><strong class="term">Klant</strong> / "account", "u": de natuurlijke persoon of rechtspersoon die een account aanmaakt, een licentie afneemt of de Dienst op een eigen WordPress-website installeert.</li>
+      <li><strong class="term">Betrokkene</strong>: iedere natuurlijke persoon van wie Fyndable persoonsgegevens verwerkt, waaronder websitebezoekers, leads, klanten, contactpersonen van klanten, agency-partners en support-contacten.</li>
+      <li><strong class="term">Persoonsgegevens</strong>: alle informatie over een geïdentificeerde of identificeerbare natuurlijke persoon, zoals bedoeld in de Algemene Verordening Gegevensbescherming (AVG/GDPR).</li>
+      <li><strong class="term">Verwerker</strong>: een derde partij die in opdracht van Fyndable persoonsgegevens verwerkt, zoals een hostingpartij, betaalprovider of AI-aanbieder.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-2" class="highlight">
+    <h2><span class="art-num">Art. 2</span>Wie is verantwoordelijk</h2>
+    <ol>
+      <li>Fyndable is <strong class="term">verwerkingsverantwoordelijke</strong> voor de persoonsgegevens die worden verzameld via de website fyndable.ai, het dashboard, de accountregistratie, facturatie, klantenservice en de eigen marketingactiviteiten van Fyndable.</li>
+      <li>Wanneer een Klant de WordPress-plug-in "Fyndable Client" op zijn eigen website installeert, verwerkt die plug-in gegevens van de bezoekers en het content van de eigen website van de Klant (bijvoorbeeld SEO-scores, focus-zoekwoorden en gegenereerde content gekoppeld aan berichten). Voor die verwerking treedt Fyndable op als <strong class="term">verwerker</strong> en is de Klant zelf verwerkingsverantwoordelijke. De Klant is verantwoordelijk voor het eigen privacybeleid richting de bezoekers van zijn website en voor het afsluiten van een verwerkersovereenkomst met Fyndable.</li>
+      <li>Dit privacybeleid beschrijft primair de eerste rol: het gebruik van de website fyndable.ai en het dashboard door bezoekers, leads en klanten.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-3">
+    <h2><span class="art-num">Art. 3</span>Voor wie geldt dit beleid</h2>
+    <ol>
+      <li>Bezoekers van de website fyndable.ai, bijvoorbeeld via de GEO-scan (artikel 10) of het contactformulier.</li>
+      <li>Geïnteresseerden en leads die zich aanmelden voor een proefperiode, wachtlijst of e-mailupdates.</li>
+      <li>Klanten/accounthouders en de contactpersonen van klantbedrijven die een licentie afnemen en het dashboard of de plug-in gebruiken.</li>
+      <li>Shopify-winkels die de Shopify-app installeren, en de contactpersonen van die winkels.</li>
+      <li>Agency-partners en de sub-accounts/sub-licenties die zij namens hun eigen klanten aanmaken.</li>
+      <li>Personen die contact opnemen via de chatbot, een supportticket indienen of anderszins met Fyndable communiceren.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-4">
+    <h2><span class="art-num">Art. 4</span>Account- en factuurgegevens</h2>
+    <ol>
+      <li>Bij het aanmaken van een account of het afsluiten van een abonnement (Starter, Professional, Business of Agency) verzamelen wij: naam, e-mailadres, bedrijfs-/domeingegevens, het gekozen abonnement en de daaraan gekoppelde licentiesleutel.</li>
+      <li>Voor facturatie kunnen daarnaast een straatnaam, postcode, plaats en land worden vastgelegd.</li>
+      <li>Deze gegevens worden gebruikt om een account en licentie aan te maken en te beheren, facturen op te stellen, de overeenkomst uit te voeren en contact te onderhouden over de Dienst.</li>
+      <li>Voor agency-licenties worden daarnaast het aantal toegestane sub-licenties en de koppeling tussen het WordPress-gebruikersaccount en de agency-tenant vastgelegd.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-5" class="highlight">
+    <h2><span class="art-num">Art. 5</span>Betaalgegevens</h2>
+    <ol>
+      <li>Betalingen en abonnementen worden verwerkt via de betaalproviders <strong class="term">Stripe</strong> (creditcard, SEPA-incasso, wereldwijd) en/of <strong class="term">Mollie</strong> (iDEAL, Bancontact, SEPA, met name binnen Europa).</li>
+      <li>Kaart- en bankgegevens worden rechtstreeks door Stripe of Mollie verwerkt en niet door Fyndable zelf opgeslagen.</li>
+      <li>Fyndable bewaart wel transactiegegevens die nodig zijn voor de boekhouding en facturatie, zoals bedrag, valuta, betaalstatus, factuurnummer, gekozen abonnementsvorm/periode en de referentie van de betaling bij Stripe of Mollie.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-6" class="highlight">
+    <h2><span class="art-num">Art. 6</span>Koppeling met Google-diensten</h2>
+    <ol>
+      <li>De Dienst biedt de mogelijkheid om, op initiatief van de Klant, een koppeling te maken met <strong class="term">Google Search Console</strong>, <strong class="term">Google Analytics 4</strong> en <strong class="term">Google Ads</strong>, en om <strong class="term">Google Tag Manager</strong> op de eigen website te plaatsen.</li>
+      <li>Deze koppeling verloopt via een centrale, door Fyndable beheerde Google OAuth-toepassing. De verkregen toegangs- en vernieuwingstokens worden opgeslagen in de WordPress-database van de eigen website van de Klant, niet centraal bij Fyndable. Fyndable houdt per klant wel het aantal API-verzoeken aan deze Google-diensten bij, ten behoeve van gebruikslimieten en kostenbeheer.</li>
+      <li>In het vervolg op b, heeft Fyndable Smart SEO dus geen toegang tot de data en kunnen wij dit dus ook niet delen met derden.</li>
+      <li>Via deze koppelingen ontvangt de Klant (en indirect, voor zover nodig om de Dienst te leveren, Fyndable) gegevens zoals zoekverkeer, posities, kliks, websiteverkeer en advertentieprestaties die aan de Google-account van de Klant zijn gekoppeld.</li>
+      <li>Het gebruik van deze koppelingen valt daarnaast onder het privacybeleid van Google zelf.</li>
+
+    </ol>
+  </article>
+
+  <article id="artikel-7" class="highlight">
+    <h2><span class="art-num">Art. 7</span>AI-content en SEO/SERP-data</h2>
+    <ol>
+      <li>Om automatisch content, meta-teksten, contentbriefings, schema-data en afbeeldingen te genereren, wordt invoer zoals zoekwoorden, prompts, paginacontent en contextinformatie doorgestuurd naar AI-modellen van derde partijen, waaronder <strong class="term">OpenAI</strong>, modellen die via <strong class="term">OpenRouter</strong> worden aangeroepen, en <strong class="term">OpenArt.ai</strong> voor beeldgeneratie.</li>
+      <li>Voor zoekwoordenonderzoek, concurrentieanalyse en SERP-data wordt gebruikgemaakt van <strong class="term">DataForSEO</strong>. Als de Klant zelf een API-sleutel voor Ahrefs of SE Ranking invoert, wordt de betreffende data rechtstreeks via het eigen account van de Klant bij die partij opgevraagd.</li>
+      <li>Deze verwerkingen bevatten in de regel geen persoonsgegevens van derden, tenzij de Klant dergelijke gegevens zelf in een prompt, zoekwoord of paginacontent opneemt.</li>
+      <li>Fyndable slaat de content en invoer van de Klant niet op en gebruikt deze niet voor het trainen of verbeteren van AI-modellen, zoals ook beschreven in artikel 7 van de Algemene Voorwaarden.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-8">
+    <h2><span class="art-num">Art. 8</span>Optionele koppelingen</h2>
+    <ol>
+      <li>De Klant kan zelf optioneel koppelingen inrichten met <strong class="term">Slack</strong> (webhook-berichten met meldingen en rapportages), <strong class="term">Zapier</strong> of <strong class="term">Make.com</strong> (webhooks naar eigen workflows), <strong class="term">Notion</strong> (via een eigen API-sleutel, voor het synchroniseren van SEO-scores en content) en <strong class="term">Google Drive</strong> (export van rapporten).</li>
+      <li>Deze koppelingen worden alleen geactiveerd wanneer de Klant ze zelf configureert. De gegevens die hierbij worden gedeeld (bijvoorbeeld rapportinhoud, SEO-scores, paginatitels) worden bepaald door de instellingen van de Klant.</li>
+      <li>Voor deze koppelingen geldt het privacybeleid van de betreffende derde partij; de Klant is zelf verantwoordelijk voor een rechtmatige inzet van deze integraties.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-9" class="highlight">
+    <h2><span class="art-num">Art. 9</span>Fyndable voor Shopify</h2>
+    <ol>
+      <li>Wanneer een winkel de Shopify-app "Fyndable Smart SEO" installeert, ontvangen wij van Shopify het winkeldomein, de winkelnaam, het e-mailadres van de winkel en een toegangstoken voor de rechten die de winkel heeft goedgekeurd.</li>
+      <li>Het abonnement loopt via Shopify. Wij ontvangen alleen het gekozen plan en de status van het abonnement, geen betaalgegevens. Voor de proefperiode houden wij bij wanneer deze is gestart en welke producten in de proefperiode met AI zijn geoptimaliseerd.</li>
+      <li>Om de Dienst te leveren leest de app winkelinhoud, zoals producten, collecties, pagina's, blogartikelen en vertalingen, en slaat de app instellingen en resultaten op, zoals het winkelprofiel (taal, toon, doelgroep), gevolgde zoekwoorden en posities, SEO-audits, redirects, rapporten, een activiteitenlog en productfeeds. Voor het genereren van teksten wordt winkelinhoud doorgestuurd naar de AI-aanbieders uit artikel 7.</li>
+      <li>De 404-monitor slaat alleen het niet-gevonden pad en de verwijzende pagina zonder querystring op. Er worden geen IP-adressen of andere gegevens van winkelbezoekers bewaard.</li>
+      <li>Bij een koppeling met Google Search Console worden de toegangstokens versleuteld bij Fyndable opgeslagen en worden statistieken per pagina en zoekopdracht (kliks, vertoningen, positie) van de afgelopen 28 dagen bewaard. Tokens worden nooit aan de browser doorgegeven.</li>
+      <li>Wekelijkse rapporten worden alleen verstuurd als de winkel dit inschakelt, naar het e-mailadres dat de winkel daarvoor opgeeft. Elke e-mail bevat een afmeldlink.</li>
+      <li>De app verwerkt geen klant- of bestelgegevens van de winkel. Op verzoeken van Shopify om klantgegevens in te zien of te wissen zijn daarom geen gegevens bij Fyndable aanwezig.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-10">
+    <h2><span class="art-num">Art. 10</span>GEO-scan op de website</h2>
+    <ol>
+      <li>Wie op fyndable.ai een gratis GEO-scan aanvraagt, geeft een website-adres, maximaal twee zoekwoorden, een e-mailadres en eventueel een naam en bedrijfsnaam op, en geeft daarvoor uitdrukkelijk toestemming.</li>
+      <li>Wij slaan deze gegevens op samen met het tijdstip van de toestemming, het IP-adres en de browserinformatie (gebruikt om misbruik te beperken) en de resultaten van de scan.</li>
+      <li>Voor de scan wordt de opgegeven website geanalyseerd met AI-modellen via OpenRouter en zoek- en AI-zichtbaarheidsdata van DataForSEO. Daarbij worden geen persoonsgegevens meegestuurd.</li>
+      <li>Wij gebruiken het e-mailadres om contact op te nemen over het resultaat van de scan. U kunt uw toestemming altijd intrekken via webmaster@fyndable.ai.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-11">
+    <h2><span class="art-num">Art. 11</span>Support, chat en rapportages</h2>
+    <ol>
+      <li>Wanneer een supportticket wordt ingediend, verwerken wij het onderwerp, het bericht, de gekozen prioriteit, eventuele bijgevoegde schermafbeeldingen en de correspondentie/antwoorden die volgen, gekoppeld aan het account van de Klant.</li>
+      <li>Over deze tickets kunnen automatische e-mailmeldingen worden verstuurd naar het bij het account bekende e-mailadres.</li>
+      <li>Als op de website of in het dashboard een chatbot/AI-assistent actief is, kunnen gesprekken tussen de bezoeker en de assistent worden verwerkt om de gestelde vraag te kunnen beantwoorden.</li>
+      <li>De Dienst kan geautomatiseerd periodieke rapportages (dagelijks, wekelijks of maandelijks) per e-mail versturen met een overzicht van SEO- en contentgegevens van de website van de Klant.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-12">
+    <h2><span class="art-num">Art. 12</span>Cookies en vergelijkbare technieken</h2>
+    <ol>
+      <li>Voor het inloggen op het dashboard en het onthouden van een sessie worden functionele/noodzakelijke cookies geplaatst, waaronder het standaard WordPress-inlog- en sessiecookie en een technisch cookie waarmee wordt gecontroleerd of de browser cookies accepteert.</li>
+      <li>Indien de Klant Google Analytics 4 en/of Google Tag Manager op zijn website inschakelt via de Dienst, worden door Google (mede) analytische en/of marketingcookies geplaatst. Dit is een keuze van de Klant voor de eigen website en valt onder diens eigen cookie- en privacybeleid.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-13">
+    <h2><span class="art-num">Art. 13</span>Grondslagen voor verwerking</h2>
+    <table class="data-table">
+      <tr><th>Grondslag</th><th>Voorbeeld</th></tr>
+      <tr><td>Uitvoering van de overeenkomst</td><td>Account, licentie, facturatie, levering van de Dienst</td></tr>
+      <tr><td>Wettelijke verplichting</td><td>Fiscale bewaarplicht van facturen en boekhouding</td></tr>
+      <tr><td>Gerechtvaardigd belang</td><td>Beveiliging, misbruikpreventie, verbetering van de Dienst</td></tr>
+      <tr><td>Toestemming</td><td>Niet-noodzakelijke cookies, nieuwsbrief, chatbotgesprekken waar van toepassing</td></tr>
+    </table>
+  </article>
+
+  <article id="artikel-14" class="highlight">
+    <h2><span class="art-num">Art. 14</span>Doorgifte buiten de EER</h2>
+    <ol>
+      <li>Een aantal van de hierboven genoemde derde partijen is gevestigd buiten de Europese Economische Ruimte (EER), onder meer OpenAI, OpenRouter, OpenArt.ai, Stripe, Google, Slack en Notion.</li>
+      <li>Voor doorgifte van persoonsgegevens naar deze partijen zorgt Fyndable voor passende waarborgen, zoals modelcontractbepalingen (Standard Contractual Clauses) en/of deelname aan het EU-VS Data Privacy Framework, voor zover van toepassing.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-15">
+    <h2><span class="art-num">Art. 15</span>Bewaartermijnen</h2>
+    <ol>
+      <li>Accountgegevens worden bewaard zolang het account bestaat. Na beëindiging verwijderen wij het account op verzoek, met uitzondering van gegevens die wij wettelijk moeten bewaren.</li>
+      <li>Factuur- en betaalgegevens worden bewaard conform de wettelijke fiscale bewaarplicht (in Nederland doorgaans 7 jaar).</li>
+      <li>Supporttickets en bijlagen worden bewaard zolang het account bestaat en samen met het account verwijderd.</li>
+      <li>Gegevens van een GEO-scan via de website (artikel 10) worden na 90 dagen verwijderd.</li>
+      <li>Bij het verwijderen van de Shopify-app wordt de Google-koppeling direct verwijderd en het abonnement beëindigd. Zodra Shopify het wisverzoek voor de winkel stuurt (doorgaans 48 uur na het verwijderen van de app), wissen wij alle winkelgegevens uit artikel 9. Alleen het winkeldomein en de gegevens van de proefperiode blijven bewaard, om te voorkomen dat een proefperiode opnieuw wordt gestart.</li>
+      <li>SEO- en contentgegevens die de plug-in op de eigen website van de Klant opslaat, blijven bestaan zolang de bijbehorende content bestaat of tot de Klant deze verwijdert; via de ingebouwde AVG-exporteer- en verwijderfunctie van de plug-in (Gereedschappen → Persoonsgegevens exporteren/wissen in WordPress) kan de Klant gegevens van zijn eigen eindgebruikers exporteren of laten verwijderen.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-16">
+    <h2><span class="art-num">Art. 16</span>Beveiliging</h2>
+    <ol>
+      <li>Fyndable treft passende technische en organisatorische maatregelen om persoonsgegevens te beschermen tegen verlies of onrechtmatige verwerking.</li>
+      <li>Gevoelige instellingen, zoals API-sleutels van gekoppelde diensten, kunnen versleuteld worden opgeslagen.</li>
+      <li>Toegang tot accountgegevens, facturatie en supportgegevens is beperkt tot medewerkers voor wie dit noodzakelijk is voor de uitoefening van hun functie.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-17">
+    <h2><span class="art-num">Art. 17</span>Uw rechten</h2>
+    <ol>
+      <li>U heeft het recht op inzage, rectificatie en verwijdering van uw persoonsgegevens, op beperking van en bezwaar tegen de verwerking, en op gegevensoverdraagbaarheid.</li>
+      <li>Voor gegevens die in het dashboard of via facturatie/support bij Fyndable bekend zijn, kunt u dit recht uitoefenen door contact op te nemen via webmaster@fyndable.ai.</li>
+      <li>Voor gegevens die de plug-in op de eigen website van een Klant verwerkt over de eindgebruikers van die website, kan de betreffende Klant als verwerkingsverantwoordelijke een verzoek afhandelen via de ingebouwde WordPress-privacytools; Fyndable ondersteunt dit als verwerker.</li>
+      <li>U heeft het recht om een klacht in te dienen bij de Autoriteit Persoonsgegevens.</li>
+    </ol>
+  </article>
+
+  <article id="artikel-18">
+    <h2><span class="art-num">Art. 18</span>Wijzigingen en contact</h2>
+    <ol>
+      <li>Fyndable kan dit privacybeleid wijzigen. De actuele versie wordt gepubliceerd op de website en/of in het dashboard, met vermelding van de datum van laatste wijziging.</li>
+      <li>Vragen over dit privacybeleid of over de verwerking van uw persoonsgegevens kunt u richten aan: Fyndable Smart SEO, webmaster@fyndable.ai.</li>
+    </ol>
+  </article>
+
+  <footer class="doc-footer">
+    Fyndable Smart SEO - Privacybeleid. Dit document is een concept, gebaseerd op de werking van de Fyndable-software, en vervangt geen juridisch advies.
+  </footer>
+  </div>
+
+  <div data-lang="en" lang="en">
+  <h1 class="doc-title">Privacy Policy</h1>
+  <div class="doc-subtitle">Fyndable Smart SEO</div>
+  <div class="doc-version">Version: 2 - Last modified on 5 November 2026</div>
+
+  <div class="notice">
+    This English version is a translation provided for convenience. In the event of any conflict or difference in interpretation between the Dutch and the English version, the Dutch version shall prevail.
+  </div>
+
+  <article id="article-1">
+    <h2><span class="art-num">Art. 1</span>Definitions</h2>
+    <ol>
+      <li><strong class="term">Fyndable Smart SEO</strong> / "we", "us", "Fyndable": established in Hoogland, the Netherlands, registered with the Dutch Chamber of Commerce under number 42118746, the provider of the Fyndable Smart SEO website, dashboard and WordPress plugins.</li>
+      <li><strong class="term">Website/Service</strong>: the website fyndable.ai, the associated SaaS dashboard, the WordPress plugins ("Fyndable Client" and "Fyndable SaaS Dashboard") and the Shopify app "Fyndable Smart SEO" offered by Fyndable.</li>
+      <li><strong class="term">Customer</strong> / "account", "you": the natural person or legal entity that creates an account, purchases a licence or installs the Service on its own WordPress website.</li>
+      <li><strong class="term">Data subject</strong>: any natural person whose personal data Fyndable processes, including website visitors, leads, customers, contact persons of customers, agency partners and support contacts.</li>
+      <li><strong class="term">Personal data</strong>: any information relating to an identified or identifiable natural person, as referred to in the General Data Protection Regulation (GDPR).</li>
+      <li><strong class="term">Processor</strong>: a third party that processes personal data on behalf of Fyndable, such as a hosting party, payment provider or AI provider.</li>
+    </ol>
+  </article>
+
+  <article id="article-2" class="highlight">
+    <h2><span class="art-num">Art. 2</span>Who is responsible</h2>
+    <ol>
+      <li>Fyndable is the <strong class="term">controller</strong> for the personal data collected via the website fyndable.ai, the dashboard, account registration, billing, customer service and Fyndable's own marketing activities.</li>
+      <li>When a Customer installs the WordPress plugin "Fyndable Client" on its own website, that plugin processes data about the visitors and the content of the Customer's own website (for example SEO scores, focus keywords and generated content linked to posts). For that processing Fyndable acts as <strong class="term">processor</strong> and the Customer is itself the controller. The Customer is responsible for its own privacy policy towards the visitors of its website and for concluding a data processing agreement with Fyndable.</li>
+      <li>This privacy policy primarily describes the first role: the use of the website fyndable.ai and the dashboard by visitors, leads and customers.</li>
+    </ol>
+  </article>
+
+  <article id="article-3">
+    <h2><span class="art-num">Art. 3</span>Who this policy applies to</h2>
+    <ol>
+      <li>Visitors to the website fyndable.ai, for example via the GEO scan (Article 10) or the contact form.</li>
+      <li>Prospects and leads who sign up for a trial, waiting list or e-mail updates.</li>
+      <li>Customers/account holders and the contact persons of customer companies that purchase a licence and use the dashboard or the plugin.</li>
+      <li>Shopify stores that install the Shopify app, and the contact persons of those stores.</li>
+      <li>Agency partners and the sub-accounts/sub-licences they create on behalf of their own customers.</li>
+      <li>Persons who contact us via the chatbot, submit a support ticket or otherwise communicate with Fyndable.</li>
+    </ol>
+  </article>
+
+  <article id="article-4">
+    <h2><span class="art-num">Art. 4</span>Account and billing data</h2>
+    <ol>
+      <li>When you create an account or take out a subscription (Starter, Professional, Business or Agency), we collect: name, e-mail address, company/domain details, the chosen subscription and the associated licence key.</li>
+      <li>For billing purposes, a street name, postcode, city and country may also be recorded.</li>
+      <li>This data is used to create and manage an account and licence, to draw up invoices, to perform the agreement and to stay in touch about the Service.</li>
+      <li>For agency licences, the number of permitted sub-licences and the link between the WordPress user account and the agency tenant are also recorded.</li>
+    </ol>
+  </article>
+
+  <article id="article-5" class="highlight">
+    <h2><span class="art-num">Art. 5</span>Payment data</h2>
+    <ol>
+      <li>Payments and subscriptions are processed via the payment providers <strong class="term">Stripe</strong> (credit card, SEPA direct debit, worldwide) and/or <strong class="term">Mollie</strong> (iDEAL, Bancontact, SEPA, mainly within Europe).</li>
+      <li>Card and bank details are processed directly by Stripe or Mollie and are not stored by Fyndable itself.</li>
+      <li>Fyndable does retain transaction data required for accounting and billing, such as amount, currency, payment status, invoice number, chosen subscription type/period and the payment reference at Stripe or Mollie.</li>
+    </ol>
+  </article>
+
+  <article id="article-6" class="highlight">
+    <h2><span class="art-num">Art. 6</span>Connection with Google services</h2>
+    <ol>
+      <li>At the Customer's initiative, the Service offers the option to connect with <strong class="term">Google Search Console</strong>, <strong class="term">Google Analytics 4</strong> and <strong class="term">Google Ads</strong>, and to place <strong class="term">Google Tag Manager</strong> on the Customer's own website.</li>
+      <li>This connection runs via a central Google OAuth application managed by Fyndable. The access and refresh tokens obtained are stored in the WordPress database of the Customer's own website, not centrally at Fyndable. Fyndable does keep track, per customer, of the number of API requests to these Google services, for usage limits and cost management.</li>
+      <li>Following on from b, Fyndable Smart SEO therefore has no access to this data and consequently cannot share it with third parties.</li>
+      <li>Through these connections the Customer (and indirectly, insofar as necessary to provide the Service, Fyndable) receives data such as search traffic, rankings, clicks, website traffic and advertising performance linked to the Customer's Google account.</li>
+      <li>The use of these connections is also subject to Google's own privacy policy.</li>
+    </ol>
+  </article>
+
+  <article id="article-7" class="highlight">
+    <h2><span class="art-num">Art. 7</span>AI content and SEO/SERP data</h2>
+    <ol>
+      <li>To automatically generate content, meta texts, content briefs, schema data and images, input such as keywords, prompts, page content and context information is sent to AI models of third parties, including <strong class="term">OpenAI</strong>, models called via <strong class="term">OpenRouter</strong>, and <strong class="term">OpenArt.ai</strong> for image generation.</li>
+      <li>For keyword research, competitor analysis and SERP data, <strong class="term">DataForSEO</strong> is used. If the Customer enters its own API key for Ahrefs or SE Ranking, the relevant data is requested directly from that party via the Customer's own account.</li>
+      <li>As a rule, this processing does not include personal data of third parties, unless the Customer itself includes such data in a prompt, keyword or page content.</li>
+      <li>Fyndable does not store the Customer's content or input and does not use it to train or improve AI models, as also described in Article 7 of the Terms and Conditions.</li>
+    </ol>
+  </article>
+
+  <article id="article-8">
+    <h2><span class="art-num">Art. 8</span>Optional integrations</h2>
+    <ol>
+      <li>The Customer may optionally set up integrations with <strong class="term">Slack</strong> (webhook messages with notifications and reports), <strong class="term">Zapier</strong> or <strong class="term">Make.com</strong> (webhooks to its own workflows), <strong class="term">Notion</strong> (via its own API key, for synchronising SEO scores and content) and <strong class="term">Google Drive</strong> (export of reports).</li>
+      <li>These integrations are only activated when the Customer configures them itself. The data shared in this context (for example report content, SEO scores, page titles) is determined by the Customer's settings.</li>
+      <li>These integrations are subject to the privacy policy of the third party concerned; the Customer is itself responsible for the lawful use of these integrations.</li>
+    </ol>
+  </article>
+
+  <article id="article-9" class="highlight">
+    <h2><span class="art-num">Art. 9</span>Fyndable for Shopify</h2>
+    <ol>
+      <li>When a store installs the Shopify app "Fyndable Smart SEO", we receive from Shopify the store domain, the store name, the store's e-mail address and an access token for the permissions the store has approved.</li>
+      <li>The subscription runs via Shopify. We only receive the chosen plan and the status of the subscription, no payment details. For the trial period we record when it started and which products were optimised with AI during the trial.</li>
+      <li>To provide the Service, the app reads store content, such as products, collections, pages, blog articles and translations, and stores settings and results, such as the store profile (language, tone, target audience), tracked keywords and rankings, SEO audits, redirects, reports, an activity log and product feeds. To generate texts, store content is sent to the AI providers listed in Article 7.</li>
+      <li>The 404 monitor only stores the path that was not found and the referring page without query string. No IP addresses or other data of store visitors are retained.</li>
+      <li>When connecting Google Search Console, the access tokens are stored in encrypted form at Fyndable, and statistics per page and search query (clicks, impressions, position) for the past 28 days are retained. Tokens are never passed to the browser.</li>
+      <li>Weekly reports are only sent if the store enables them, to the e-mail address the store provides for this purpose. Every e-mail contains an unsubscribe link.</li>
+      <li>The app does not process customer or order data of the store. There is therefore no data at Fyndable in response to Shopify requests to access or erase customer data.</li>
+    </ol>
+  </article>
+
+  <article id="article-10">
+    <h2><span class="art-num">Art. 10</span>GEO scan on the website</h2>
+    <ol>
+      <li>Anyone requesting a free GEO scan on fyndable.ai provides a website address, up to two keywords, an e-mail address and optionally a name and company name, and gives explicit consent for this.</li>
+      <li>We store this data together with the time of consent, the IP address and browser information (used to limit abuse) and the results of the scan.</li>
+      <li>For the scan, the specified website is analysed using AI models via OpenRouter and search and AI visibility data from DataForSEO. No personal data is sent along in this process.</li>
+      <li>We use the e-mail address to contact you about the result of the scan. You can withdraw your consent at any time via webmaster@fyndable.ai.</li>
+    </ol>
+  </article>
+
+  <article id="article-11">
+    <h2><span class="art-num">Art. 11</span>Support, chat and reports</h2>
+    <ol>
+      <li>When a support ticket is submitted, we process the subject, the message, the chosen priority, any attached screenshots and the subsequent correspondence/replies, linked to the Customer's account.</li>
+      <li>Automatic e-mail notifications about these tickets may be sent to the e-mail address known for the account.</li>
+      <li>If a chatbot/AI assistant is active on the website or in the dashboard, conversations between the visitor and the assistant may be processed in order to answer the question asked.</li>
+      <li>The Service can automatically send periodic reports (daily, weekly or monthly) by e-mail with an overview of SEO and content data of the Customer's website.</li>
+    </ol>
+  </article>
+
+  <article id="article-12">
+    <h2><span class="art-num">Art. 12</span>Cookies and similar technologies</h2>
+    <ol>
+      <li>For logging in to the dashboard and remembering a session, functional/necessary cookies are placed, including the standard WordPress login and session cookie and a technical cookie used to check whether the browser accepts cookies.</li>
+      <li>If the Customer enables Google Analytics 4 and/or Google Tag Manager on its website via the Service, analytical and/or marketing cookies are placed (in part) by Google. This is the Customer's choice for its own website and is subject to its own cookie and privacy policy.</li>
+    </ol>
+  </article>
+
+  <article id="article-13">
+    <h2><span class="art-num">Art. 13</span>Legal bases for processing</h2>
+    <table class="data-table">
+      <tr><th>Legal basis</th><th>Example</th></tr>
+      <tr><td>Performance of the agreement</td><td>Account, licence, billing, delivery of the Service</td></tr>
+      <tr><td>Legal obligation</td><td>Statutory tax retention of invoices and accounts</td></tr>
+      <tr><td>Legitimate interest</td><td>Security, abuse prevention, improvement of the Service</td></tr>
+      <tr><td>Consent</td><td>Non-essential cookies, newsletter, chatbot conversations where applicable</td></tr>
+    </table>
+  </article>
+
+  <article id="article-14" class="highlight">
+    <h2><span class="art-num">Art. 14</span>Transfers outside the EEA</h2>
+    <ol>
+      <li>Several of the third parties mentioned above are established outside the European Economic Area (EEA), including OpenAI, OpenRouter, OpenArt.ai, Stripe, Google, Slack and Notion.</li>
+      <li>For transfers of personal data to these parties, Fyndable ensures appropriate safeguards, such as Standard Contractual Clauses and/or participation in the EU-US Data Privacy Framework, where applicable.</li>
+    </ol>
+  </article>
+
+  <article id="article-15">
+    <h2><span class="art-num">Art. 15</span>Retention periods</h2>
+    <ol>
+      <li>Account data is retained for as long as the account exists. After termination we delete the account on request, except for data we are legally required to retain.</li>
+      <li>Billing and payment data is retained in accordance with the statutory tax retention obligation (in the Netherlands generally 7 years).</li>
+      <li>Support tickets and attachments are retained for as long as the account exists and are deleted together with the account.</li>
+      <li>Data from a GEO scan via the website (Article 10) is deleted after 90 days.</li>
+      <li>When the Shopify app is uninstalled, the Google connection is deleted immediately and the subscription is ended. As soon as Shopify sends the erasure request for the store (usually 48 hours after the app is uninstalled), we erase all store data described in Article 9. Only the store domain and the trial period data are retained, to prevent a trial from being started again.</li>
+      <li>SEO and content data that the plugin stores on the Customer's own website remains in place for as long as the associated content exists or until the Customer deletes it; via the plugin's built-in GDPR export and erasure function (Tools → Export/Erase Personal Data in WordPress), the Customer can export or have deleted the data of its own end users.</li>
+    </ol>
+  </article>
+
+  <article id="article-16">
+    <h2><span class="art-num">Art. 16</span>Security</h2>
+    <ol>
+      <li>Fyndable takes appropriate technical and organisational measures to protect personal data against loss or unlawful processing.</li>
+      <li>Sensitive settings, such as API keys of connected services, may be stored in encrypted form.</li>
+      <li>Access to account data, billing and support data is limited to employees for whom this is necessary for the performance of their duties.</li>
+    </ol>
+  </article>
+
+  <article id="article-17">
+    <h2><span class="art-num">Art. 17</span>Your rights</h2>
+    <ol>
+      <li>You have the right of access to, rectification and erasure of your personal data, the right to restriction of and objection to processing, and the right to data portability.</li>
+      <li>For data known to Fyndable in the dashboard or via billing/support, you can exercise these rights by contacting webmaster@fyndable.ai.</li>
+      <li>For data that the plugin processes on a Customer's own website about the end users of that website, the Customer concerned, as controller, can handle a request via the built-in WordPress privacy tools; Fyndable supports this as processor.</li>
+      <li>You have the right to lodge a complaint with the Dutch Data Protection Authority (Autoriteit Persoonsgegevens).</li>
+    </ol>
+  </article>
+
+  <article id="article-18">
+    <h2><span class="art-num">Art. 18</span>Changes and contact</h2>
+    <ol>
+      <li>Fyndable may amend this privacy policy. The current version is published on the website and/or in the dashboard, stating the date of the last amendment.</li>
+      <li>Questions about this privacy policy or about the processing of your personal data can be addressed to: Fyndable Smart SEO, webmaster@fyndable.ai.</li>
+    </ol>
+  </article>
+
+  <footer class="doc-footer">
+    Fyndable Smart SEO - Privacy Policy. This document is a draft, based on how the Fyndable software works, and does not replace legal advice.
+  </footer>
+  </div>
+</div>
+
+<script>
+  var root = document.documentElement;
+  var langButtons = document.querySelectorAll('[data-set-lang]');
+
+  function setLang(lang){
+    if(lang !== 'nl' && lang !== 'en') lang = 'nl';
+    root.setAttribute('data-lang', lang);
+    root.setAttribute('lang', lang);
+    langButtons.forEach(function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-set-lang') === lang ? 'true' : 'false');
+    });
+    setActive();
+  }
+
+  langButtons.forEach(function(b){
+    b.addEventListener('click', function(){
+      setLang(b.getAttribute('data-set-lang'));
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // Highlight active section in the visible sidebar nav on scroll
+  function setActive(){
+    var nav = document.querySelector('.toc[data-lang="' + root.getAttribute('data-lang') + '"]');
+    if(!nav) return;
+    var links = nav.querySelectorAll('a');
+    var idx = 0;
+    var scrollPos = window.scrollY + 120;
+    links.forEach(function(l, i){
+      var sec = document.querySelector(l.getAttribute('href'));
+      if(sec && sec.offsetTop <= scrollPos) idx = i;
+    });
+    document.querySelectorAll('.toc a').forEach(function(l){ l.classList.remove('active'); });
+    if(links[idx]) links[idx].classList.add('active');
+  }
+  window.addEventListener('scroll', setActive);
+
+  // Start language: #en / #nl in the URL, otherwise the data-lang attribute (set by the plugin)
+  var hash = (location.hash || '').replace('#', '');
+  setLang(hash === 'en' || hash === 'nl' ? hash : root.getAttribute('data-lang'));
+</script>
+
+</body>
+</html>

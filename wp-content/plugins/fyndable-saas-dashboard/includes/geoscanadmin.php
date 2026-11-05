@@ -105,19 +105,27 @@ class GeoScanAdmin
         $this->repository->deleteExpired();
 
         if (isset($_GET['view']) && $_GET['view'] === 'report' && !empty($_GET['scan_id'])) {
-            $this->report->render((int)$_GET['scan_id']);
+            $scanId = (int)$_GET['scan_id'];
+            if (!$this->canAccessScan($this->repository->getStatus($scanId))) {
+                echo '<div class="wrap"><p>' . esc_html__('Scan niet gevonden.', 'sseo-ai-saas') . '</p></div>';
+                return;
+            }
+            $this->report->render($scanId);
             return;
         }
 
-        $recentScans = $this->repository->getRecent(20, 'admin');
-        $websiteScans = $this->repository->getRecent(50, 'website');
+        // Agency partners only see the scans they started themselves; website
+        // leads and the provider settings below are provider-only.
+        $isProvider = $this->isProvider();
+        $recentScans = $this->repository->getRecent(20, 'admin', $isProvider ? null : get_current_user_id());
+        $websiteScans = $isProvider ? $this->repository->getRecent(50, 'website') : [];
         $websiteKey = $this->settings->getWebsiteScanKey();
         $publicEndpoint = rest_url('ai-seo-saas/v1/public/geo-scan');
         $saasShell = isset($_GET['saas_shell']) ? '&saas_shell=1' : '';
         ?>
         <div class="wrap sseo-ai-license-admin sseo-geo-admin">
             <?php ShellUi::pageHeader(
-            __('Provider', 'sseo-ai-saas'),
+            $isProvider ? __('Provider', 'sseo-ai-saas') : __('Agency', 'sseo-ai-saas'),
             __('GEO Scans', 'sseo-ai-saas'),
             __('GEO Readiness Scan', 'sseo-ai-saas'),
             __('How visible a site is to AI assistants, per keyword and per model.', 'sseo-ai-saas')
@@ -221,6 +229,7 @@ class GeoScanAdmin
                 <?php endif; ?>
             </div>
 
+            <?php if ($isProvider) : ?>
             <div class="sseo-ai-card">
                 <h2><?php esc_html_e('Website Scans', 'sseo-ai-saas'); ?></h2>
                 <p class="description"><?php esc_html_e('Scans aangevraagd via het publieke formulier op fyndable.ai. Bevat contactgegevens voor follow-up.', 'sseo-ai-saas'); ?></p>
@@ -419,9 +428,33 @@ class GeoScanAdmin
                     </button>
                 </form>
             </div>
+            <?php endif; ?>
             <?php $this->renderPdfDialog(); ?>
         </div>
         <?php
+    }
+
+    private function isProvider(): bool
+    {
+        return current_user_can('manage_options');
+    }
+
+    /**
+     * Providers may open every scan; agency partners only the admin scans
+     * they started themselves.
+     */
+    private function canAccessScan(?array $scan): bool
+    {
+        if (!$scan) {
+            return false;
+        }
+        if ($this->isProvider()) {
+            return true;
+        }
+
+        return ($scan['source'] ?? '') === 'admin'
+            && (int)($scan['user_id'] ?? 0) > 0
+            && (int)$scan['user_id'] === get_current_user_id();
     }
 
     private function getPdfUrl(int $scanId): string
@@ -506,7 +539,10 @@ class GeoScanAdmin
             wp_send_json_error(__('Maximaal 10 keywords.', 'sseo-ai-saas'));
         }
 
-        $scanId = $this->repository->insertQueued($url, $keywords, $language, ['source' => 'admin']);
+        $scanId = $this->repository->insertQueued($url, $keywords, $language, [
+            'source'  => 'admin',
+            'user_id' => get_current_user_id(),
+        ]);
         $this->queue->enqueue($scanId);
 
         wp_send_json_success([
@@ -529,7 +565,7 @@ class GeoScanAdmin
         $scanId = (int)($_POST['scan_id'] ?? 0);
         $scan = $this->repository->getStatus($scanId);
 
-        if (!$scan) {
+        if (!$this->canAccessScan($scan)) {
             wp_send_json_error(__('Scan niet gevonden.', 'sseo-ai-saas'));
         }
 
@@ -559,6 +595,9 @@ class GeoScanAdmin
 
         $scanId = (int)($_GET['scan_id'] ?? 0);
         check_admin_referer('sseo_geo_scan_pdf_' . $scanId);
+        if (!$this->canAccessScan($this->repository->getStatus($scanId))) {
+            wp_die(esc_html__('Het voltooide scanrapport is niet gevonden.', 'sseo-ai-saas'), esc_html__('PDF genereren mislukt', 'sseo-ai-saas'), ['response' => 404]);
+        }
         $cover = sanitize_key($_GET['cover'] ?? 'light');
         $pdf = $this->pdf->render($scanId, $cover);
         if (is_wp_error($pdf)) {

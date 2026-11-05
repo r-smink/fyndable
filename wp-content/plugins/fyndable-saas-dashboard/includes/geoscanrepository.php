@@ -36,6 +36,8 @@ class GeoScanRepository
             progress_label varchar(255) NOT NULL DEFAULT '',
             error varchar(500) DEFAULT NULL,
             source varchar(20) NOT NULL DEFAULT 'admin',
+            user_id bigint(20) unsigned DEFAULT NULL,
+            tenant_key varchar(64) DEFAULT NULL,
             email varchar(255) DEFAULT NULL,
             consent tinyint(1) NOT NULL DEFAULT 0,
             consent_at datetime DEFAULT NULL,
@@ -49,6 +51,8 @@ class GeoScanRepository
             KEY expires_at (expires_at),
             KEY status (status),
             KEY source (source),
+            KEY user_id (user_id),
+            KEY tenant_key (tenant_key),
             KEY email (email)
         ) $charsetCollate;";
 
@@ -95,6 +99,24 @@ class GeoScanRepository
             $wpdb->query("ALTER TABLE $table ADD COLUMN source varchar(20) NOT NULL DEFAULT 'admin' AFTER error");
             $wpdb->query("ALTER TABLE $table ADD KEY source (source)");
         }
+        if (!$hasColumn('user_id')) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN user_id bigint(20) unsigned DEFAULT NULL AFTER source");
+            $wpdb->query("ALTER TABLE $table ADD KEY user_id (user_id)");
+        }
+        if (!$hasColumn('tenant_key')) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN tenant_key varchar(64) DEFAULT NULL AFTER user_id");
+            $wpdb->query("ALTER TABLE $table ADD KEY tenant_key (tenant_key)");
+
+            // Tenant scans used to keep their tenant key in meta.name only.
+            $rows = $wpdb->get_results("SELECT id, meta FROM $table WHERE source = 'tenant'", ARRAY_A) ?: [];
+            foreach ($rows as $row) {
+                $meta = json_decode((string)$row['meta'], true);
+                $tenantKey = is_array($meta) ? sanitize_text_field($meta['name'] ?? '') : '';
+                if ($tenantKey !== '') {
+                    $wpdb->update($table, ['tenant_key' => $tenantKey], ['id' => (int)$row['id']], ['%s'], ['%d']);
+                }
+            }
+        }
         if (!$hasColumn('email')) {
             $wpdb->query("ALTER TABLE $table ADD COLUMN email varchar(255) DEFAULT NULL AFTER source");
             $wpdb->query("ALTER TABLE $table ADD KEY email (email)");
@@ -113,8 +135,9 @@ class GeoScanRepository
     /**
      * Create a queued scan row and return its id.
      *
-     * @param array $meta Optional: source ('admin'|'website'), email, consent,
-     *                    ip, user_agent.
+     * @param array $meta Optional: source ('admin'|'website'|'tenant'), user_id
+     *                    (owner of an admin scan), tenant_key (owner of a
+     *                    tenant scan), email, consent, ip, user_agent.
      */
     public function insertQueued(string $url, array $keywords, string $language, array $meta = []): int
     {
@@ -136,6 +159,8 @@ class GeoScanRepository
                 'progress'       => 0,
                 'progress_label' => __('In wachtrij', 'sseo-ai-saas'),
                 'source'         => $source,
+                'user_id'        => !empty($meta['user_id']) ? (int)$meta['user_id'] : null,
+                'tenant_key'     => !empty($meta['tenant_key']) ? sanitize_text_field($meta['tenant_key']) : null,
                 'email'          => !empty($meta['email']) ? sanitize_email($meta['email']) : null,
                 'consent'        => $consent ? 1 : 0,
                 'consent_at'     => $consent ? current_time('mysql') : null,
@@ -154,7 +179,7 @@ class GeoScanRepository
                 'created_at'     => current_time('mysql'),
                 'expires_at'     => gmdate('Y-m-d H:i:s', strtotime('+' . $retentionDays . ' days')),
             ],
-            ['%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%d', '%s', '%s', '%s', '%s']
+            ['%s', '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s']
         );
 
         return (int)$wpdb->insert_id;
@@ -260,7 +285,7 @@ class GeoScanRepository
 
         $row = $wpdb->get_row(
             $wpdb->prepare(
-                "SELECT id, url, keywords, language, status, progress, progress_label, error, source, email, consent, score, created_at
+                "SELECT id, url, keywords, language, status, progress, progress_label, error, source, user_id, tenant_key, email, consent, score, created_at
                  FROM {$table} WHERE id = %d",
                 $id
             ),
@@ -390,17 +415,52 @@ class GeoScanRepository
     }
 
     /**
-     * Get recent scans ordered by created_at desc, filtered by source.
+     * Get recent scans ordered by created_at desc, filtered by source and,
+     * when $userId is given, by the user who started the scan.
      */
-    public function getRecent(int $limit = 20, string $source = 'admin'): array
+    public function getRecent(int $limit = 20, string $source = 'admin', ?int $userId = null): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+
+        if ($userId !== null) {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE source = %s AND user_id = %d ORDER BY created_at DESC LIMIT %d",
+                $source,
+                $userId,
+                $limit
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE source = %s ORDER BY created_at DESC LIMIT %d",
+                $source,
+                $limit
+            );
+        }
+
+        $rows = $wpdb->get_results($sql, ARRAY_A);
+
+        foreach ($rows as &$row) {
+            $row['result'] = !empty($row['result']) ? json_decode($row['result'], true) : [];
+            $row['meta'] = !empty($row['meta']) ? json_decode($row['meta'], true) : [];
+        }
+
+        return $rows ?: [];
+    }
+
+    /**
+     * Recent scans started by one tenant through the API gateway.
+     */
+    public function getRecentForTenant(int $limit, string $tenantKey): array
     {
         global $wpdb;
         $table = $wpdb->prefix . self::TABLE;
 
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$table} WHERE source = %s ORDER BY created_at DESC LIMIT %d",
-                $source,
+                "SELECT id, url, keywords, language, status, progress, progress_label, error, score, result, created_at
+                 FROM {$table} WHERE source = 'tenant' AND tenant_key = %s ORDER BY created_at DESC LIMIT %d",
+                $tenantKey,
                 $limit
             ),
             ARRAY_A
@@ -408,7 +468,6 @@ class GeoScanRepository
 
         foreach ($rows as &$row) {
             $row['result'] = !empty($row['result']) ? json_decode($row['result'], true) : [];
-            $row['meta'] = !empty($row['meta']) ? json_decode($row['meta'], true) : [];
         }
 
         return $rows ?: [];

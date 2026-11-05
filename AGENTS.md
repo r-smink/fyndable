@@ -606,3 +606,10 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - **Geen `read_themes` meer (5.1.1):** de themacontrole op dubbel schema (`StoreSchemaService::themeCheck`, `getMainThemeFiles`, `POST /api/schema/theme-check`, kolommen `theme_check`/`theme_checked_at`) is verwijderd; de schemapagina verwijst naar de Rich Results Test van Google. Scope uit `shopify.app.toml`, `config/shopify.php` en `.env` (server: `SHOPIFY_SCOPES` ook aanpassen).
 - **Symfony 7.4.23** (composer audit, advisories van 2026-11-04).
 - **AI-crawlers alleen lezen (5.1.1):** `AiCrawlers` heeft alleen nog `BOTS`, `liveStatus()`, `parse()`, `isBlocked()`. API `GET /api/ai-crawlers`, `POST /api/ai-crawlers/check`. Geen themacode, geen keuzes; kolom `ai_crawlers` gedropt.
+
+## GEO scans per eigenaar (SaaS 1.10.2, 2026-11-05)
+
+- `sseo_ai_geo_scans` heeft nu `user_id` (wie een admin-scan startte, uit `GeoScanAdmin::ajaxRun` en AdminApi) en `tenant_key` (eigenaar van een scan via de API gateway; de migratie vult bestaande tenant-scans uit `meta.name`). Migratie draait via de versiebump.
+- GEO Scan-pagina: provider (`manage_options`) ziet alles. Een agency partner (`agency_geo_scan`) ziet alleen de eigen admin-scans en krijgt geen websitescans (leads) en geen provider-instellingen (multi-model, website-scan key/model) te zien. Rapportweergave, AJAX-status en PDF-download controleren de eigenaar via `GeoScanAdmin::canAccessScan()`. Agency-scans van voor 1.10.2 hebben geen `user_id` en zijn alleen voor de provider zichtbaar.
+- API gateway: `GET /geo-scan/{id}/status` alleen voor scans met `source=tenant` en dezelfde tenant key (`hash_equals`), `GET /geo-scan/recent` via `GeoScanRepository::getRecentForTenant()` (zonder meta/e-mail). Voorheen kon elke tenant elke scan lezen.
+- Agency-menu van de shell: "GEO Scans" staat bovenaan "Support & Tools" (was bij de redesign weggevallen).
