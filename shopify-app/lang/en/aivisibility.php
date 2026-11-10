@@ -17,6 +17,9 @@ return [
     'search_mentions' => 'Search mentions',
 
     'js' => [
+        'mentions_none' => 'No AI answers found that mention {target}.',
+        'mentions_found' => '{count} AI answers mention {target}. The most relevant ones:',
+        'mentions_volume' => 'AI search volume: {volume}',
         'enter_question' => 'Enter a question',
         'enter_keyword' => 'Enter at least one keyword',
     ],

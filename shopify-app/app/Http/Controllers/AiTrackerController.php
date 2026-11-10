@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Shop;
 use App\Services\AiTrackerService;
+use App\Services\DataForSeoFormat;
 use App\Services\LicenseService;
 use Illuminate\Http\Request;
 
@@ -76,7 +77,12 @@ class AiTrackerController extends Controller
             return ['error' => 'prompt_required'];
         }
 
-        return $this->tracker->multiProviderCheck($shop->license_key, $shop->tenant_key, $prompt);
+        return $this->tracker->multiProviderCheck(
+            $shop->license_key,
+            $shop->tenant_key,
+            $prompt,
+            DataForSeoFormat::brandTerms($shop->shop_name, $shop->shop_domain)
+        );
     }
 
     /**

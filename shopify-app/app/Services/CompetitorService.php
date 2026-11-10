@@ -60,11 +60,12 @@ class CompetitorService
 
             if ($enrichCount < 5) {
                 $bl = $this->saas->backlinksSummary($licenseKey, $tenantKey, $domain);
-                if (! isset($bl['error'])) {
+                if (! DataForSeoFormat::failed($bl)) {
+                    $summary = DataForSeoFormat::backlinkSummary($bl);
                     $competitor['backlinks'] = [
-                        'total' => $bl['total_backlinks'] ?? $bl['backlinks'] ?? null,
-                        'referring_domains' => $bl['referring_domains'] ?? null,
-                        'domain_rank' => $bl['rank'] ?? $bl['domain_rank'] ?? null,
+                        'total' => $summary['backlinks'],
+                        'referring_domains' => $summary['referring_domains'],
+                        'domain_rank' => $summary['rank'],
                     ];
                 }
                 $enrichCount++;
@@ -103,10 +104,14 @@ class CompetitorService
         $blA = $this->saas->backlinksSummary($licenseKey, $tenantKey, $domainA);
         $blB = $this->saas->backlinksSummary($licenseKey, $tenantKey, $domainB);
 
+        $summary = fn (array $bl) => DataForSeoFormat::failed($bl)
+            ? ['error' => $bl['message'] ?? $bl['error'] ?? 'request_failed']
+            : DataForSeoFormat::backlinkSummary($bl);
+
         return [
             'domains' => [
-                $domainA => isset($blA['error']) ? ['error' => $blA['error']] : $blA,
-                $domainB => isset($blB['error']) ? ['error' => $blB['error']] : $blB,
+                ['domain' => $domainA] + $summary($blA),
+                ['domain' => $domainB] + $summary($blB),
             ],
         ];
     }

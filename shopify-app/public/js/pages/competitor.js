@@ -56,7 +56,34 @@
         }
         Fyn.html('comp-compare-result', Fyn.loading());
         const data = await Fyn.busy(button, () => Fyn.post('/competitor/compare', { domain_a: a, domain_b: b }));
-        Fyn.html('comp-compare-result', data.error ? Fyn.errorBanner(data) : Fyn.json(data.domains || data));
+        if (data.error) {
+            Fyn.html('comp-compare-result', Fyn.errorBanner(data));
+            return;
+        }
+        const domains = data.domains || [];
+        const metrics = [
+            ['rank', t('comp_m_rank')],
+            ['backlinks', t('comp_m_backlinks')],
+            ['referring_domains', t('comp_m_domains')],
+            ['referring_main_domains', t('comp_m_main_domains')],
+            ['broken_backlinks', t('comp_m_broken')],
+            ['spam_score', t('comp_m_spam')],
+        ];
+        // Highlight the better value per row (lower is better for broken links and spam).
+        const lowerIsBetter = ['broken_backlinks', 'spam_score'];
+        const cell = (key, d) => {
+            if (d.error) return esc('-');
+            const values = domains.filter(x => !x.error && x[key] !== null && x[key] !== undefined).map(x => Number(x[key]));
+            const v = d[key];
+            const best = values.length === 2 && values[0] !== values[1]
+                && Number(v) === (lowerIsBetter.includes(key) ? Math.min(...values) : Math.max(...values));
+            return best ? `<strong>${esc(Fyn.num(v))}</strong>` : esc(Fyn.num(v));
+        };
+        const errors = domains.filter(d => d.error).map(d => Fyn.banner('warning', t('comp_domain_error', { domain: d.domain, error: d.error }))).join('');
+        Fyn.html('comp-compare-result', `<s-stack gap="base">${errors}${Fyn.table(
+            [t('comp_m_metric'), ...domains.map(d => ({ label: d.domain, format: 'numeric' }))],
+            metrics.map(([key, label]) => [esc(label), ...domains.map(d => cell(key, d))])
+        )}</s-stack>`);
     };
 
     Fyn.page(async (ctx) => {

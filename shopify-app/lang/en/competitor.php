@@ -17,6 +17,14 @@ return [
     'compare' => 'Compare',
 
     'js' => [
+        'comp_m_metric' => 'Metric',
+        'comp_m_rank' => 'Domain rank (0-100)',
+        'comp_m_backlinks' => 'Backlinks',
+        'comp_m_domains' => 'Referring domains',
+        'comp_m_main_domains' => 'Referring main domains',
+        'comp_m_broken' => 'Broken backlinks',
+        'comp_m_spam' => 'Spam score',
+        'comp_domain_error' => 'No data for {domain}: {error}',
         'comp_enter_keyword' => 'Enter a target keyword',
         'comp_enter_domains' => 'Enter both domains',
         'comp_your_position' => 'Your position: {position}',

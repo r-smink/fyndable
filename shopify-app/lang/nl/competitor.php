@@ -17,6 +17,14 @@ return [
     'compare' => 'Vergelijken',
 
     'js' => [
+        'comp_m_metric' => 'Meetwaarde',
+        'comp_m_rank' => 'Domeinrank (0-100)',
+        'comp_m_backlinks' => 'Backlinks',
+        'comp_m_domains' => 'Verwijzende domeinen',
+        'comp_m_main_domains' => 'Verwijzende hoofddomeinen',
+        'comp_m_broken' => 'Kapotte backlinks',
+        'comp_m_spam' => 'Spamscore',
+        'comp_domain_error' => 'Geen gegevens voor {domain}: {error}',
         'comp_enter_keyword' => 'Vul een doelzoekwoord in',
         'comp_enter_domains' => 'Vul beide domeinen in',
         'comp_your_position' => 'Jouw positie: {position}',

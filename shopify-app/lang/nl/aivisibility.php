@@ -17,6 +17,9 @@ return [
     'search_mentions' => 'Vermeldingen zoeken',
 
     'js' => [
+        'mentions_none' => 'Geen AI-antwoorden gevonden waarin {target} wordt genoemd.',
+        'mentions_found' => '{count} AI-antwoorden noemen {target}. De meest relevante:',
+        'mentions_volume' => 'AI-zoekvolume: {volume}',
         'enter_question' => 'Vul een vraag in',
         'enter_keyword' => 'Vul minstens een zoekwoord in',
     ],

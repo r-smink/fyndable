@@ -7,14 +7,15 @@ namespace App\Services;
  *
  * Aggregates LLM visibility data into an AI Optimization Tracker overview:
  * total mentions, timeseries trends, multi-provider brand checks, and
- * AI-generated recommendations.
+ * AI-generated recommendations. DataForSEO responses are reduced to the
+ * fields the dashboard shows (DataForSeoFormat).
  */
 class AiTrackerService
 {
     public function __construct(private SaasProxyClient $saas) {}
 
     /**
-     * Build an overview combining target metrics and top pages.
+     * Build an overview combining target metrics, top pages and top brands.
      */
     public function overview(string $licenseKey, string $tenantKey, string $target): array
     {
@@ -32,14 +33,14 @@ class AiTrackerService
 
         return [
             'target' => $target,
-            'metrics' => isset($metrics['error']) ? null : $metrics,
-            'top_pages' => isset($topPages['error']) ? null : $topPages,
-            'top_brands' => isset($topBrands['error']) ? null : $topBrands,
+            'metrics' => DataForSeoFormat::failed($metrics) ? null : DataForSeoFormat::targetMetrics($metrics),
+            'top_pages' => DataForSeoFormat::failed($topPages) ? [] : DataForSeoFormat::topItems($topPages),
+            'top_brands' => DataForSeoFormat::failed($topBrands) ? [] : DataForSeoFormat::topItems($topBrands),
         ];
     }
 
     /**
-     * Get timeseries data for AI visibility trends.
+     * Change in mentions and AI search volume per period.
      */
     public function timeseries(string $licenseKey, string $tenantKey, string $target): array
     {
@@ -47,30 +48,31 @@ class AiTrackerService
             'target' => $target,
         ]);
 
-        $newLost = $this->saas->llmMentions($licenseKey, $tenantKey, 'timeseries_new_and_lost', [
-            'target' => $target,
-        ]);
+        if (DataForSeoFormat::failed($delta)) {
+            return $delta + ['target' => $target];
+        }
 
         return [
             'target' => $target,
-            'delta' => isset($delta['error']) ? null : $delta,
-            'new_and_lost' => isset($newLost['error']) ? null : $newLost,
+            'points' => DataForSeoFormat::timeseriesDelta($delta),
         ];
     }
 
     /**
-     * Check brand visibility across all 4 LLM providers simultaneously.
+     * Check brand visibility across all 4 LLM providers.
+     *
+     * @param  array<int, string>  $brandTerms  store name/domain terms for the "mentioned" flag
      */
-    public function multiProviderCheck(string $licenseKey, string $tenantKey, string $prompt): array
+    public function multiProviderCheck(string $licenseKey, string $tenantKey, string $prompt, array $brandTerms = []): array
     {
         $providers = ['chatgpt', 'claude', 'gemini', 'perplexity'];
         $results = [];
 
         foreach ($providers as $provider) {
             $response = $this->saas->llmResponse($licenseKey, $tenantKey, $provider, $prompt);
-            $results[$provider] = isset($response['error'])
-                ? ['error' => $response['error']]
-                : $response;
+            $results[$provider] = DataForSeoFormat::failed($response)
+                ? ['error' => $response['message'] ?? $response['error'] ?? 'request_failed']
+                : DataForSeoFormat::llmAnswer($response, $brandTerms);
         }
 
         return ['prompt' => $prompt, 'results' => $results];
@@ -85,11 +87,12 @@ class AiTrackerService
             'target' => $target,
         ]);
 
-        if (isset($metrics['error'])) {
+        if (DataForSeoFormat::failed($metrics)) {
             return ['error' => 'no_data_available'];
         }
 
-        $metricsJson = json_encode($metrics, JSON_UNESCAPED_UNICODE);
+        // Only the aggregated numbers, not the raw DataForSEO envelope.
+        $metricsJson = json_encode(DataForSeoFormat::targetMetrics($metrics), JSON_UNESCAPED_UNICODE);
 
         $result = $this->saas->aiGenerate($licenseKey, $tenantKey, [
             [
@@ -107,7 +110,8 @@ class AiTrackerService
         }
 
         $text = $result['text'] ?? '';
-        $decoded = json_decode($text, true);
+        // Models sometimes wrap the JSON in a ```json fence.
+        $decoded = json_decode(preg_replace('/^\s*```(?:json)?\s*|\s*```\s*$/i', '', $text), true);
 
         return $decoded ?: ['recommendations' => [], 'raw' => $text];
     }

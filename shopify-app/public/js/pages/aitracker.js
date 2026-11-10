@@ -7,6 +7,7 @@
 
     const { t, esc } = Fyn;
     const PROVIDERS = { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', perplexity: 'Perplexity' };
+    const PLATFORMS = { chat_gpt: 'ChatGPT', google: 'Google AI Overview' };
 
     async function loadAiTrackerOverview() {
         Fyn.html('ait-stats', Fyn.loading());
@@ -16,16 +17,29 @@
             return;
         }
         const m = data.metrics || {};
-        Fyn.html('ait-stats', Fyn.stats([
-            { label: t('stat_mentions'), value: m.total_mentions ?? m.mentions_count ?? '-', sub: t('stat_mentions_sub') },
-            { label: t('stat_domains'), value: (data.top_brands?.data || []).length || '-', sub: t('stat_domains_sub') },
-            { label: t('stat_pages'), value: (data.top_pages?.data || []).length || '-', sub: t('stat_pages_sub') },
+        const platforms = m.platforms || [];
+        const top = platforms[0];
+        let html = Fyn.stats([
+            { label: t('stat_mentions'), value: Fyn.num(m.mentions), sub: t('stat_mentions_sub') },
+            { label: t('stat_volume'), value: Fyn.num(m.ai_search_volume), sub: t('stat_volume_sub') },
+            { label: t('stat_platform'), value: top ? (PLATFORMS[top.label] || top.label) : '-', sub: top ? t('mentions', { count: Fyn.num(top.mentions) }) : '' },
             { label: t('stat_target'), value: data.target || Fyn.cfg.shop },
-        ]));
+        ]);
+        if (m.mentions === null || m.mentions === undefined) {
+            html += Fyn.banner('info', t('no_metrics'));
+        }
+        const domains = m.source_domains || [];
+        if (domains.length) {
+            html += `<s-stack gap="small-200"><s-text type="strong">${esc(t('source_domains'))}</s-text>
+                ${domains.slice(0, 5).map(d => Fyn.row(d.label, t('mentions', { count: Fyn.num(d.mentions) }))).join('')}</s-stack>`;
+        }
+        Fyn.html('ait-stats', `<s-stack gap="base">${html}</s-stack>`);
 
-        const pages = data.top_pages?.data || [];
+        const pages = data.top_pages || [];
         Fyn.html('ait-top-pages', pages.length
-            ? pages.slice(0, 10).map(p => Fyn.row(p.url || p.page || p.title || '-', t('mentions', { count: p.mentions || p.count || '-' }))).join('')
+            ? pages.map(p => `<s-stack direction="inline" gap="base" justifyContent="space-between" alignItems="center" paddingBlock="small-200">
+                    <span class="fyn-wrap">${Fyn.link(p.label, p.label.replace(/^https?:\/\/(www\.)?/, ''))}</span>
+                    <s-text color="subdued">${esc(t('mentions', { count: Fyn.num(p.mentions) }))}</s-text></s-stack>`).join('')
             : `<s-paragraph>${esc(t('no_pages'))}</s-paragraph>`);
 
         loadAiTrackerTimeseries();
@@ -34,7 +48,26 @@
 
     async function loadAiTrackerTimeseries() {
         const data = await Fyn.api('/ai-tracker/timeseries');
-        Fyn.html('ait-timeseries', data.error ? Fyn.errorBanner(data) : Fyn.json(data.delta || data));
+        if (data.error || data.success === false) {
+            Fyn.html('ait-timeseries', Fyn.errorBanner(data));
+            return;
+        }
+        const points = data.points || [];
+        if (!points.length) {
+            Fyn.html('ait-timeseries', `<s-paragraph>${esc(t('no_trends'))}</s-paragraph>`);
+            return;
+        }
+        const tone = n => (n > 0 ? 'success' : n < 0 ? 'critical' : 'neutral');
+        Fyn.html('ait-timeseries', `<s-stack gap="base">
+                <s-text color="subdued">${esc(t('trends_help'))}</s-text>
+                ${Fyn.table(
+                    [t('col_period'), { label: t('col_delta_mentions'), format: 'numeric' }, { label: t('col_delta_volume'), format: 'numeric' }],
+                    points.slice().reverse().map(p => [
+                        esc(Fyn.fmtDate(p.date)),
+                        Fyn.badge(tone(p.mentions), Fyn.signed(p.mentions)),
+                        esc(Fyn.signed(p.ai_search_volume)),
+                    ])
+                )}</s-stack>`);
     }
 
     async function loadAiTrackerRecommendations() {
@@ -71,13 +104,13 @@
             return;
         }
         const results = data.results || {};
-        Fyn.html('ait-check-result', `<s-stack gap="base">${Object.entries(results).map(([provider, result]) => {
-            const name = PROVIDERS[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
-            const body = result && result.error ? Fyn.banner('critical', result.error) : Fyn.json(result);
-            return `<s-box padding="base" border="base" borderRadius="base">
-                    <s-stack gap="small-200"><s-text type="strong">${esc(name)}</s-text>${body}</s-stack>
-                </s-box>`;
-        }).join('')}</s-stack>`);
+        const entries = Object.entries(results);
+        const mentioned = entries.filter(([, r]) => r && r.brand_mentioned === true).length;
+        const checked = entries.filter(([, r]) => r && !r.error).length;
+        Fyn.html('ait-check-result', `<s-stack gap="base">
+                ${checked ? Fyn.banner(mentioned ? 'success' : 'warning', t('check_summary', { mentioned, total: checked })) : ''}
+                ${entries.map(([provider, result]) => Fyn.answerCard(PROVIDERS[provider] || provider.charAt(0).toUpperCase() + provider.slice(1), result)).join('')}
+            </s-stack>`);
     };
 
     Fyn.page(async () => {

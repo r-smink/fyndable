@@ -37,6 +37,14 @@ return [
     ],
 
     'js' => [
+        'kwe_cluster_summary' => '{keywords} zoekwoorden, {groups} groepen met dezelfde zoekresultaten.',
+        'kwe_cluster_title' => 'Groep {n}: {main} ({count} zoekwoorden)',
+        'kwe_cluster_single' => 'Zoekwoorden zonder groep',
+        'kwe_trends_help' => 'Interesse volgens Google Trends, waarbij 100 de piek is.',
+        'kwe_trends_avg' => 'Gemiddelde interesse',
+        'kwe_trends_period' => 'Week',
+        'kwe_trends_top' => 'Gerelateerde zoekopdrachten',
+        'kwe_trends_rising' => 'Stijgende zoekopdrachten',
         'kwe_enter_seed' => 'Vul een startzoekwoord in',
         'kwe_enter_keywords' => 'Vul minstens één zoekwoord in',
         'kwe_cluster_first' => 'Verken eerst zoekwoorden (minstens 2 nodig)',

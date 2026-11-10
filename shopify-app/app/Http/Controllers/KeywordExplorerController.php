@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shop;
+use App\Services\DataForSeoFormat;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use Illuminate\Http\Request;
@@ -75,13 +76,17 @@ class KeywordExplorerController extends Controller
             return ['error' => 'keywords_required'];
         }
 
-        return $this->saas->keywordData(
+        $result = $this->saas->keywordData(
             $shop->license_key,
             $shop->tenant_key,
             $keywords,
             $request->input('location_code') ? (int) $request->input('location_code') : null,
             $request->input('language_code') ? (string) $request->input('language_code') : null
         );
+
+        return DataForSeoFormat::failed($result)
+            ? $result
+            : ['success' => true, 'keywords' => DataForSeoFormat::keywordVolumes($result)];
     }
 
     /**
@@ -133,7 +138,11 @@ class KeywordExplorerController extends Controller
             return ['error' => 'keywords_required'];
         }
 
-        return $this->saas->googleTrends($shop->license_key, $shop->tenant_key, $keywords);
+        $result = $this->saas->googleTrends($shop->license_key, $shop->tenant_key, $keywords);
+
+        return DataForSeoFormat::failed($result)
+            ? $result
+            : ['success' => true] + DataForSeoFormat::trends($result);
     }
 
     private function guardLicensed(Request $request): ?array

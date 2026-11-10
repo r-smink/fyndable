@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Shop;
+use App\Services\DataForSeoFormat;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use Illuminate\Http\Request;
@@ -41,7 +42,13 @@ class InsightsController extends Controller
             ? $this->saas->backlinksLive($shop->license_key, $shop->tenant_key, $target, $limit)
             : $this->saas->backlinksSummary($shop->license_key, $shop->tenant_key, $target);
 
-        return $result + ['target' => $target];
+        if (DataForSeoFormat::failed($result)) {
+            return $result + ['target' => $target];
+        }
+
+        return $live
+            ? ['success' => true, 'target' => $target, 'live' => true] + DataForSeoFormat::backlinks($result)
+            : ['success' => true, 'target' => $target, 'live' => false, 'summary' => DataForSeoFormat::backlinkSummary($result)];
     }
 
     /**
@@ -64,7 +71,18 @@ class InsightsController extends Controller
             $params = [];
         }
 
-        return $this->saas->llmMentions($shop->license_key, $shop->tenant_key, $action, $params);
+        $result = $this->saas->llmMentions($shop->license_key, $shop->tenant_key, $action, $params);
+        if (DataForSeoFormat::failed($result)) {
+            return $result;
+        }
+
+        return ['success' => true, 'action' => $action] + match ($action) {
+            'search_mentions' => DataForSeoFormat::searchMentions($result),
+            'target_metrics' => DataForSeoFormat::targetMetrics($result),
+            'top_pages', 'top_domains', 'top_brands' => ['items' => DataForSeoFormat::topItems($result)],
+            'timeseries_delta' => ['points' => DataForSeoFormat::timeseriesDelta($result)],
+            default => ['items' => []],
+        };
     }
 
     /**
@@ -92,7 +110,14 @@ class InsightsController extends Controller
             $provider = 'chatgpt';
         }
 
-        return $this->saas->llmResponse($shop->license_key, $shop->tenant_key, $provider, $prompt);
+        $result = $this->saas->llmResponse($shop->license_key, $shop->tenant_key, $provider, $prompt);
+        if (DataForSeoFormat::failed($result)) {
+            return $result;
+        }
+
+        $terms = DataForSeoFormat::brandTerms($shop->shop_name, $shop->shop_domain);
+
+        return ['success' => true, 'provider' => $provider] + DataForSeoFormat::llmAnswer($result, $terms);
     }
 
     /**
@@ -118,13 +143,17 @@ class InsightsController extends Controller
             return ['error' => 'keywords_required'];
         }
 
-        return $this->saas->keywordData(
+        $result = $this->saas->keywordData(
             $shop->license_key,
             $shop->tenant_key,
             $keywords,
             $request->input('location_code') ? (int) $request->input('location_code') : null,
             $request->input('language_code') ? (string) $request->input('language_code') : null
         );
+
+        return DataForSeoFormat::failed($result)
+            ? $result
+            : ['success' => true, 'keywords' => DataForSeoFormat::keywordVolumes($result)];
     }
 
     private function guardLicensed(Request $request): ?array

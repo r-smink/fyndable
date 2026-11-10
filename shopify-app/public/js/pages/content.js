@@ -260,7 +260,8 @@
             overwrite: true,
         }));
         if (!data.success) return fail(data);
-        result(Fyn.banner('success', t('pushed', { saved: JSON.stringify(data.saved) })));
+        const parts = Object.keys(data.saved || {}).filter(k => data.saved[k] === true).map(k => t('part_' + k));
+        result(Fyn.banner('success', t('pushed', { saved: parts.join(', ') || t('none') })));
     };
 
     window.generateFaq = async function (button) {

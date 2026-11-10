@@ -88,6 +88,16 @@ return [
     ],
 
     'js' => [
+        'no_results' => 'Geen resultaten gevonden.',
+        'ai_sources' => 'Bronnen',
+        'ai_mentioned' => 'Je winkel wordt genoemd',
+        'ai_not_mentioned' => 'Je winkel wordt niet genoemd',
+        'ai_no_answer' => 'Geen antwoord ontvangen.',
+        'ai_model' => 'Model: {model}',
+        'ai_web_search' => 'met zoeken op het web',
+        'col_keyword' => 'Zoekwoord',
+        'col_ai_volume' => 'AI-zoekvolume',
+        'col_trend' => 'Trend',
         'loading' => 'Laden...',
         'saved' => 'Opgeslagen',
         'save_failed' => 'Opslaan is mislukt. Controleer de velden.',

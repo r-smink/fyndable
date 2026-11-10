@@ -37,6 +37,14 @@ return [
     ],
 
     'js' => [
+        'kwe_cluster_summary' => '{keywords} keywords, {groups} groups that share search results.',
+        'kwe_cluster_title' => 'Group {n}: {main} ({count} keywords)',
+        'kwe_cluster_single' => 'Keywords without a group',
+        'kwe_trends_help' => 'Google Trends interest, where 100 is the peak.',
+        'kwe_trends_avg' => 'Average interest',
+        'kwe_trends_period' => 'Week',
+        'kwe_trends_top' => 'Related searches',
+        'kwe_trends_rising' => 'Rising searches',
         'kwe_enter_seed' => 'Enter a seed keyword',
         'kwe_enter_keywords' => 'Enter at least one keyword',
         'kwe_cluster_first' => 'Explore keywords first (at least 2 needed)',

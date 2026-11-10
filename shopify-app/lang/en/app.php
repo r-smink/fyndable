@@ -93,6 +93,16 @@ return [
     ],
 
     'js' => [
+        'no_results' => 'No results found.',
+        'ai_sources' => 'Sources',
+        'ai_mentioned' => 'Your store is mentioned',
+        'ai_not_mentioned' => 'Your store is not mentioned',
+        'ai_no_answer' => 'No answer received.',
+        'ai_model' => 'Model: {model}',
+        'ai_web_search' => 'with web search',
+        'col_keyword' => 'Keyword',
+        'col_ai_volume' => 'AI search volume',
+        'col_trend' => 'Trend',
         // Generic
         'loading' => 'Loading...',
         'saved' => 'Saved',

@@ -54,6 +54,11 @@ return [
     'schema_note' => 'To output the JSON-LD on your storefront, enable the Fyndable SEO Schema app embed in the Shopify theme editor (Online Store > Themes > Customize > App embeds).',
 
     'js' => [
+        'part_title' => 'title',
+        'part_description' => 'description',
+        'part_meta' => 'meta title and description',
+        'part_alt_text' => 'alt text',
+        'part_schema' => 'schema',
         'no_items' => 'No items found.',
         'status_draft' => 'Draft',
         'status_archived' => 'Archived',

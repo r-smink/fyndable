@@ -54,6 +54,11 @@ return [
     'schema_note' => 'Zet de app-embed Fyndable SEO Schema aan in de Shopify-thema-editor (Online winkel > Thema\'s > Aanpassen > App-embeds) om de JSON-LD in je winkel te tonen.',
 
     'js' => [
+        'part_title' => 'titel',
+        'part_description' => 'beschrijving',
+        'part_meta' => 'metatitel en -beschrijving',
+        'part_alt_text' => 'alt-tekst',
+        'part_schema' => 'schema',
         'no_items' => 'Geen items gevonden.',
         'status_draft' => 'Concept',
         'status_archived' => 'Gearchiveerd',

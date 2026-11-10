@@ -240,9 +240,122 @@
             return label;
         },
 
-        /** Raw JSON output (insights endpoints without a structured view yet). */
-        json(data) {
-            return `<pre class="fyn-code">${esc(JSON.stringify(data, null, 2))}</pre>`;
+        /** Formatted number ('-' when missing). */
+        num(value) {
+            if (value === null || value === undefined || value === '' || isNaN(Number(value))) return '-';
+            return Number(value).toLocaleString(cfg.lang === 'nl' ? 'nl-NL' : 'en-US');
+        },
+
+        /** Signed number for changes: +12 / -3 / 0. */
+        signed(value) {
+            const n = Number(value) || 0;
+            return (n > 0 ? '+' : '') + Fyn.num(n);
+        },
+
+        /** External link (http(s) only; anything else is shown as text). */
+        link(url, label) {
+            const text = esc(label || url || '');
+            return /^https?:\/\//i.test(String(url || '')) ? `<s-link href="${esc(url)}" target="_blank">${text}</s-link>` : text;
+        },
+
+        /** Unicode sparkline for a short series of numbers. */
+        spark(values) {
+            const nums = (values || []).map(v => Number(v) || 0);
+            if (nums.length < 2) return '';
+            const bars = '▁▂▃▄▅▆▇█';
+            const max = Math.max(...nums);
+            const min = Math.min(...nums);
+            return nums.map(v => bars[max === min ? 3 : Math.round(((v - min) / (max - min)) * 7)]).join('');
+        },
+
+        /**
+         * Light Markdown (AI answers) to safe markup: paragraphs, headings,
+         * bullet and numbered lists, **bold**, *italic*, `code` and
+         * [links](https://...). Everything is escaped first.
+         */
+        markdown(text) {
+            const inline = s => esc(s)
+                .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<s-link href="$2" target="_blank">$1</s-link>')
+                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+                .replace(/(^|[\s(])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+                .replace(/`([^`]+)`/g, '<code>$1</code>');
+            const out = [];
+            let para = [];
+            let list = null;
+            const flushPara = () => {
+                if (para.length) out.push(`<s-paragraph>${para.map(inline).join('<br>')}</s-paragraph>`);
+                para = [];
+            };
+            const flushList = () => {
+                if (list) out.push(`<s-${list.tag}>${list.items.map(i => `<s-list-item>${inline(i)}</s-list-item>`).join('')}</s-${list.tag}>`);
+                list = null;
+            };
+            String(text || '').replace(/\r/g, '').split('\n').forEach(raw => {
+                const line = raw.trim();
+                const bullet = line.match(/^[-*•]\s+(.*)$/);
+                const numbered = line.match(/^\d+[.)]\s+(.*)$/);
+                const heading = line.match(/^#{1,6}\s+(.*)$/);
+                if (!line) {
+                    flushPara();
+                    flushList();
+                } else if (bullet || numbered) {
+                    flushPara();
+                    const tag = bullet ? 'unordered-list' : 'ordered-list';
+                    if (list && list.tag !== tag) flushList();
+                    if (!list) list = { tag, items: [] };
+                    list.items.push((bullet || numbered)[1]);
+                } else if (heading) {
+                    flushPara();
+                    flushList();
+                    out.push(`<s-text type="strong">${inline(heading[1].replace(/\*\*/g, ''))}</s-text>`);
+                } else {
+                    flushList();
+                    para.push(line);
+                }
+            });
+            flushPara();
+            flushList();
+            return `<s-stack gap="small-200">${out.join('')}</s-stack>`;
+        },
+
+        /** List of source links ({url, title}). */
+        sources(list, heading) {
+            if (!list || !list.length) return '';
+            return `<s-stack gap="small-200"><s-text type="strong">${esc(heading || t('ai_sources'))}</s-text>
+                <s-unordered-list>${list.map(s => `<s-list-item>${Fyn.link(s.url, s.title || s.url)}</s-list-item>`).join('')}</s-unordered-list></s-stack>`;
+        },
+
+        /**
+         * One AI answer (insights llmAnswer shape): heading, brand-mentioned
+         * badge, the answer text, sources and the model used.
+         */
+        answerCard(heading, r) {
+            if (r && r.error) {
+                return `<s-box padding="base" border="base" borderRadius="base"><s-stack gap="small-200"><s-text type="strong">${esc(heading)}</s-text>${Fyn.banner('critical', r.message || r.error)}</s-stack></s-box>`;
+            }
+            r = r || {};
+            const badge = r.brand_mentioned === true ? Fyn.badge('success', t('ai_mentioned'))
+                : r.brand_mentioned === false ? Fyn.badge('warning', t('ai_not_mentioned')) : '';
+            const meta = [r.model ? t('ai_model', { model: r.model }) : '', r.web_search ? t('ai_web_search') : ''].filter(Boolean).join(' · ');
+            return `<s-box padding="base" border="base" borderRadius="base"><s-stack gap="base">
+                    <s-stack direction="inline" gap="base" justifyContent="space-between" alignItems="center"><s-heading>${esc(heading)}</s-heading>${badge}</s-stack>
+                    ${r.answer ? Fyn.markdown(r.answer) : `<s-paragraph>${esc(t('ai_no_answer'))}</s-paragraph>`}
+                    ${Fyn.sources(r.sources)}
+                    ${meta ? `<s-text color="subdued">${esc(meta)}</s-text>` : ''}
+                </s-stack></s-box>`;
+        },
+
+        /** Keyword volume table (insights keywordVolumes shape). */
+        keywordVolumeTable(rows) {
+            if (!rows || !rows.length) return `<s-paragraph>${esc(t('no_results'))}</s-paragraph>`;
+            return Fyn.table(
+                [t('col_keyword'), { label: t('col_ai_volume'), format: 'numeric' }, t('col_trend')],
+                rows.map(r => [
+                    esc(r.keyword),
+                    esc(Fyn.num(r.ai_search_volume)),
+                    `<span title="${esc((r.monthly || []).map(m => `${m.month}: ${m.volume}`).join(', '))}">${esc(Fyn.spark((r.monthly || []).map(m => m.volume)) || '-')}</span>`,
+                ])
+            );
         },
 
         /** Grid of metric boxes: [{label, value, sub, tone}] */
