@@ -6,6 +6,7 @@ use App\Models\SeoAudit;
 use App\Models\SeoAuditItem;
 use App\Models\Shop;
 use App\Services\BrandVoice;
+use App\Services\DescriptionFormatter;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
 use App\Services\SearchConsoleService;
@@ -333,7 +334,7 @@ class ContentController extends Controller
 
         $html = $request->input('format') === 'html'
             ? $description
-            : nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+            : app(DescriptionFormatter::class)->toHtml($description);
 
         $error = match ($type) {
             'collection' => $this->writer->updateCollection($shop, $id, ['descriptionHtml' => $html]),

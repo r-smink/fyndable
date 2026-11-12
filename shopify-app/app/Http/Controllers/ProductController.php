@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\BrandVoice;
+use App\Services\DescriptionFormatter;
 use App\Models\Shop;
 use App\Services\LicenseService;
 use App\Services\SaasProxyClient;
@@ -283,7 +284,7 @@ class ProductController extends Controller
 
         $descriptionHtml = $request->input('format') === 'html'
             ? $description
-            : nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+            : app(DescriptionFormatter::class)->toHtml($description);
 
         $error = $this->writer->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
 
@@ -496,7 +497,7 @@ class ProductController extends Controller
         if (! empty($description)) {
             $descriptionHtml = $request->input('description_format') === 'html'
                 ? $description
-                : nl2br(htmlspecialchars($description, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'));
+                : app(DescriptionFormatter::class)->toHtml($description);
             $error = $this->writer->updateProduct($shop, $productId, ['descriptionHtml' => $descriptionHtml]);
             $results['description'] = $error ?: true;
         }
@@ -728,7 +729,7 @@ class ProductController extends Controller
     {
         $siteDomain = rtrim("https://{$shop->shop_domain}", '/');
         $url = ($product['onlineStoreUrl'] ?? null) ?: "{$siteDomain}/products/".($product['handle'] ?? '');
-        $description = strip_tags($product['description'] ?? '');
+        $description = app(DescriptionFormatter::class)->plain($product['description'] ?? '');
 
         $schema = [
             '@context' => 'https://schema.org/',

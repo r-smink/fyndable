@@ -6,6 +6,7 @@ use App\Jobs\SeoAuditJob;
 use App\Models\SeoAudit;
 use App\Models\SeoAuditItem;
 use App\Models\Shop;
+use App\Services\BulkOptimizer;
 use App\Services\SeoAuditor;
 use Illuminate\Http\Request;
 
@@ -137,7 +138,44 @@ class SeoAuditController extends Controller
             'items_count' => $audit->items_count,
             'summary' => $summary,
             'severity' => $severity,
+            'bulk' => $this->bulkTargets($audit),
             'finished_at' => $audit->finished_at?->toIso8601String(),
         ];
+    }
+
+    /**
+     * Bulk optimizer deep link per fixable issue: the action plus the content
+     * type with the most affected items that the action supports. The summary
+     * counts every type, so linking with the action alone (bulk defaults to
+     * products) could open a run with nothing to fix.
+     *
+     * @return array<string,array{action:string,type:string}>
+     */
+    private function bulkTargets(SeoAudit $audit): array
+    {
+        $counts = [];
+        SeoAuditItem::where('seo_audit_id', $audit->id)->select(['id', 'type', 'issues'])
+            ->chunkById(500, function ($items) use (&$counts) {
+                foreach ($items as $item) {
+                    foreach ($item->issues ?? [] as $issue) {
+                        $code = $issue['code'] ?? null;
+                        if ($code !== null && isset(SeoAuditor::BULK_FIXES[$code])) {
+                            $counts[$code][$item->type] = ($counts[$code][$item->type] ?? 0) + 1;
+                        }
+                    }
+                }
+            });
+
+        $targets = [];
+        foreach ($counts as $code => $types) {
+            $action = SeoAuditor::BULK_FIXES[$code];
+            $types = array_filter($types, fn ($count, $type) => BulkOptimizer::validAction($type, $action), ARRAY_FILTER_USE_BOTH);
+            if ($types !== []) {
+                arsort($types);
+                $targets[$code] = ['action' => $action, 'type' => array_key_first($types)];
+            }
+        }
+
+        return $targets;
     }
 }

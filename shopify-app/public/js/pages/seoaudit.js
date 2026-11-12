@@ -58,10 +58,14 @@
             ? Fyn.table(
                 [t('col_issue'), t('col_severity'), { label: t('col_items'), format: 'numeric' }, t('col_action')],
                 codes.map(code => {
-                    const bulk = meta.bulk_fixes[code];
+                    // Link with the content type that has the most affected items (bulk defaults to products).
+                    const target = (result.bulk || {})[code];
+                    const bulkQuery = target
+                        ? 'type=' + encodeURIComponent(target.type) + '&action=' + encodeURIComponent(target.action)
+                        : '';
                     const actions = `<s-stack direction="inline" gap="small-200">
                             <s-button variant="tertiary" onclick="filterIssue('${esc(code)}')">${esc(t('show_items'))}</s-button>
-                            ${bulk && bulkAllowed ? `<s-button variant="tertiary" href="${esc(Fyn.url('bulk', 'action=' + encodeURIComponent(bulk)))}">${esc(t('fix_bulk'))}</s-button>` : ''}
+                            ${bulkQuery && bulkAllowed ? `<s-button variant="tertiary" href="${esc(Fyn.url('bulk', bulkQuery))}">${esc(t('fix_bulk'))}</s-button>` : ''}
                         </s-stack>`;
                     return [esc(Fyn.issueLabel(code)), severityBadge(meta.issues[code] || 'info'), esc(result.summary[code]), actions];
                 }))

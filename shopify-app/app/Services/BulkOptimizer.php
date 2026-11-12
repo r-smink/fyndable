@@ -233,10 +233,8 @@ class BulkOptimizer
             return 'ai_failed';
         }
 
-        $html = implode('', array_map(
-            fn ($p) => '<p>'.htmlspecialchars(trim($p), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8').'</p>',
-            array_filter(preg_split('/\n\s*\n|\n/', trim($text)), fn ($p) => trim($p) !== '')
-        ));
+        // One paragraph per line (the prompt asks for plain paragraphs); Markdown the model adds anyway becomes HTML.
+        $html = app(DescriptionFormatter::class)->toHtml(preg_replace('/\n+/', "\n\n", trim($text)));
 
         return $item['type'] === 'collection'
             ? $this->writer->updateCollection($shop, $item['id'], ['descriptionHtml' => $html])

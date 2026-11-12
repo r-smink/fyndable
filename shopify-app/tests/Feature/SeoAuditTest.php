@@ -309,6 +309,25 @@ it('returns the latest result with issue groups ordered by severity', function (
         ->assertJson(fn ($json) => $json->where('result.summary', fn ($summary) => array_keys($summary->all()) === ['empty_collection', 'meta_desc_missing', 'meta_title_long'])->etc());
 });
 
+it('links each bulk fix to the content type with the most affected items', function () {
+    $shop = auditShop();
+    Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
+    $audit = SeoAudit::create(['shop_id' => $shop->id, 'status' => 'completed', 'score' => 70, 'finished_at' => now(),
+        'summary' => ['meta_desc_missing' => 3, 'missing_alt' => 1, 'thin_content' => 1]]);
+    $add = fn ($type, $id, $codes) => SeoAuditItem::create(['seo_audit_id' => $audit->id, 'shop_id' => $shop->id, 'type' => $type,
+        'resource_id' => "gid://shopify/{$id}", 'title' => $id, 'url' => null, 'score' => 60,
+        'issues' => array_map(fn ($c) => ['code' => $c, 'severity' => 'warning'], $codes)]);
+    $add('page', 'Page/1', ['meta_desc_missing', 'thin_content']);
+    $add('page', 'Page/2', ['meta_desc_missing']);
+    $add('product', 'Product/3', ['meta_desc_missing', 'missing_alt']);
+
+    $this->getJson('/api/audit/latest', auditHeaders())
+        ->assertJsonPath('result.bulk.meta_desc_missing', ['action' => 'meta', 'type' => 'page'])
+        ->assertJsonPath('result.bulk.missing_alt', ['action' => 'alt_text', 'type' => 'product'])
+        // Pages have no bulk "descriptions" action, so thin content on a page gets no bulk link.
+        ->assertJsonMissingPath('result.bulk.thin_content');
+});
+
 it('lists audit items filtered by issue and type', function () {
     $shop = auditShop();
     Http::fake(['portal.test/*' => Http::response(['status' => 'active', 'tier' => 'professional'])]);
