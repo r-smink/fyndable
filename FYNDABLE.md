@@ -515,7 +515,7 @@ Alle admin-endpoints vereisen `manage_options`, `edit_posts` of `publish_posts`;
 - **ZIP-handling**: white-label builder valideert entry-paden (zip-slip-guard) en sanitiseert bedrijfsnamen vóór injectie in PHP-broncode.
 - **CSRF**: alle admin_post- en AJAX-handlers hebben nonce + capability; geen `nopriv`-handlers.
 - **Output**: `esc_html`/`esc_attr`/`esc_url`/`wp_kses_post` consistent; `postMessage` beperkt tot tenant-origin.
-- **PDF**: dompdf `isRemoteEnabled=false`.
+- **PDF**: mPDF (GEO-scanrapport); alle afbeeldingen zijn eigen data-URI's (logo's, SVG-balken/pills), scandata wordt alleen ge-escaped als tekst geplaatst, dus er worden geen externe bronnen geladen.
 - **CSV**: exports neutraliseren formule-injectie (`=`,`+`,`-`,`@`-prefix guard).
 - **Auto-login**: single-use 32-char transient-tokens, 5 min, agency↔tenant-binding.
 

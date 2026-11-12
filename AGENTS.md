@@ -417,9 +417,19 @@ Note: `php` CLI **is** available in this workspace (`php -l` works) — earlier 
 
 The SaaS GEO scan now tests up to the first 3 keywords via DataForSEO LLM Responses for ChatGPT, Gemini and Perplexity. Google AI Overview continues to use all successful keyword lookups. `GeoScanner` stores normalized `platform_visibility` and `competitive_benchmark` fields in the existing result JSON; failed platform calls degrade to `unavailable` rather than a false negative. The live benchmark compares own-domain and cited competitor visibility within the successful test set.
 
-`GeoScanPdf` (`includes/geoscanpdf.php`) renders the completed scan on demand with Dompdf 3.1.6, bundled under the plugin-local `vendor/` directory. The protected `admin-post.php?action=sseo_geo_scan_download_pdf` action requires `agency_geo_scan`/`manage_options` plus a scan-specific nonce. The report/download pages open a cover-selection dialog with `cover=light|dark`; both versions contain the same prospect-safe scan data and exclude lead details, consent, API errors, usage and cost.
+`GeoScanPdf` (`includes/geoscanpdf.php`) renders the completed scan on demand with mPDF (see "GEO scan PDF on mPDF" below), bundled under the plugin-local `vendor/` directory. The protected `admin-post.php?action=sseo_geo_scan_download_pdf` action requires `agency_geo_scan`/`manage_options` plus a scan-specific nonce. The report/download pages open a cover-selection dialog with `cover=light|dark`; both versions contain the same prospect-safe scan data and exclude lead details, consent, API errors, usage and cost.
 
 New scans may take longer because of up to 9 additional live platform requests. `GeoScanQueue` lock/stale-running limits are 20 minutes. Verification commands: `php -l` on changed PHP files, `node --check assets/geo-scan-admin.js`, and plugin-local Composer validation through the available Composer PHAR or a system Composer installation.
+
+### GEO scan PDF on mPDF (SaaS 1.11.0, 2026-11-12)
+
+Redesign after `design_handoff_geo_report/` (cover + 6 pages). Dompdf replaced by `mpdf/mpdf ^8.2` (composer `platform.php` 8.0.30).
+
+- **Fonts:** `tools/trim-mpdf-fonts.php` (composer `post-install-cmd`/`post-update-cmd`) deletes every mPDF font except DejaVu Sans (vendor ~92 MB → ~8 MB). `render()` therefore registers **only** `outfit` (assets/fonts/outfit) + `dejavusans` in `fontdata`; mPDF's default font list points at deleted files and throws. Missing Outfit glyphs fall back to DejaVu (`useSubstitutions`).
+- **Pages:** named `@page cover` (margin 0) / `inner` / `appendix` with `<htmlpageheader>`/`<htmlpagefooter>`; `<pagebreak page-selector="inner" resetpagenum="1" />` after the cover, footer `{PAGENO} / {nbpg}`. The cover is absolutely positioned blocks plus one flowed anchor `<div style="page: cover">` — without flowed content mPDF ignores the following `<pagebreak>` and page 2 renders under the cover.
+- **mPDF limits found (8.3):** block styling (radius, width, background) on a `<div>` inside `<td>` is ignored; `inline-block` = full-width block; no `border-radius` on inline elements; `margin-right` and `height` on floats are ignored (use `margin-left` on the next float / height on an inner block); CSS gradient angles are mirrored (`315deg` in mPDF = `135deg` in a browser); SVG gradients work on `fill` but not on `stroke`; inline `<svg>` loses gradients (use data URIs).
+- **Workarounds:** bars (`barDataUri`), label pills (`pill`/`pillHtml`, width measured with `GetStringWidth` via `$this->mpdf`, only set during `render()`), icons (`iconDataUri`, line icons replacing Dashicons), platform monograms, step numbers and the score ring (filled arc path) are SVG data URIs; cards/tiles/lists are floats.
+- Content flows: no fixed page heights; actions are rows in one table (rows are not split), keyword table repeats its `thead`. "Key finding" = first `findings` item (no separate result field).
 
 ## Custom plans (per-klant agency-tier pricing, 2026-10-16)
 
