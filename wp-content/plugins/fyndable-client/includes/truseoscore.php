@@ -23,6 +23,60 @@ class TruSEOSCORE
         // (covers Gutenberg REST saves that bypass the classic-editor nonce check in saveSeoMeta).
         add_action('updated_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
         add_action('added_post_meta', [$this, 'invalidateDashboardCache'], 10, 4);
+
+        // Front end: the SEO title / meta description fields were stored but never printed.
+        add_filter('pre_get_document_title', [$this, 'filterDocumentTitle'], 15);
+        add_action('wp_head', [$this, 'outputMetaDescription'], 1);
+    }
+
+    /**
+     * Post ID whose SEO fields apply to the current request (singular views and the static posts page), or 0.
+     */
+    private function currentSeoPostId(): int
+    {
+        if (is_admin() || is_feed() || $this->otherSeoPluginActive()) {
+            return 0;
+        }
+        if (is_singular()) {
+            return (int) get_queried_object_id();
+        }
+        if (is_home() && !is_front_page()) {
+            return (int) get_option('page_for_posts');
+        }
+        return 0;
+    }
+
+    private function otherSeoPluginActive(): bool
+    {
+        return defined('WPSEO_VERSION') || defined('RANK_MATH_VERSION') || defined('AIOSEO_VERSION') || defined('SEOPRESS_VERSION');
+    }
+
+    /**
+     * Use the Fyndable SEO title (as entered, no site-name suffix) for the <title> tag.
+     */
+    public function filterDocumentTitle($title)
+    {
+        $postId = $this->currentSeoPostId();
+        if (!$postId || post_password_required($postId)) {
+            return $title;
+        }
+        $seoTitle = trim((string) get_post_meta($postId, '_sseo_ai_title', true));
+        return $seoTitle !== '' ? wp_strip_all_tags($seoTitle) : $title;
+    }
+
+    /**
+     * Print <meta name="description"> from the Fyndable SEO description, when set.
+     */
+    public function outputMetaDescription(): void
+    {
+        $postId = $this->currentSeoPostId();
+        if (!$postId || post_password_required($postId)) {
+            return;
+        }
+        $desc = trim((string) get_post_meta($postId, '_sseo_ai_description', true));
+        if ($desc !== '') {
+            printf('<meta name="description" content="%s" />' . "\n", esc_attr(wp_strip_all_tags($desc)));
+        }
     }
 
     /**

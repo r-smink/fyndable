@@ -620,3 +620,13 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 - Toegepast in InsightsController (llm-check, llm-mentions, keyword-data, backlinks), KeywordExplorerController (volume, trends), AiTrackerService (overview, timeseries, check, recommendations krijgt alleen de cijfers) en CompetitorService (analyse + vergelijking; de backlinkkolommen waren altijd leeg doordat de envelope niet werd uitgepakt). `timeseries_new_and_lost` wordt niet meer opgevraagd (vorm niet gedocumenteerd, kostte credits).
 - JS: `Fyn.json` is weg. Nieuw in `fyndable.js`: `num`, `signed`, `link`, `spark`, `markdown` (veilige lichte Markdown naar Polaris-lijsten/paragrafen), `sources`, `answerCard`, `keywordVolumeTable`. GEO-scan krijgt een rapportweergave (`geoReport`: score, samenvatting, zichtbaarheid per platform, score per onderdeel, acties, sterke/zwakke punten, bevindingen).
 - Tests: `tests/Unit/DataForSeoFormatTest.php`, `tests/Feature/InsightsFormattingTest.php`.
+
+## Shopify: bulk-deeplink per type + Markdown in beschrijvingen (2026-11-12)
+
+- SEO-audit "Fix in bulk": de summary telt alle contenttypes, maar de link gaf alleen `action` mee (bulk valt terug op producten), dus bv. 5x "meta description missing" op pagina's opende een lege run. `SeoAuditController::bulkTargets()` geeft nu `result.bulk[code] = {action, type}` terug: het type met de meeste getroffen items dat de actie ondersteunt (`BulkOptimizer::validAction`); geen link als geen enkel type de actie kent (bv. thin content op pagina's).
+- `App\Services\DescriptionFormatter`: AI-tekst (vaak Markdown: `**vet**`, `1.`-lijsten, `##`) -> veilige HTML (p, br, strong, em, h2/h3, ul/ol). Vervangt `nl2br(htmlspecialchars())` in Product/ContentController (save-description, push-all) en de alinea-opbouw in `BulkOptimizer::aiDescription`. `plain()` maakt de Product-JSON-LD-description schoon (tags + Markdown-resten). Bestaande beschrijvingen met letterlijke `**` blijven staan tot ze opnieuw gegenereerd/opgeslagen worden.
+
+## fyndable-client: SEO-title/description in <head> + custom schema fix (2026-11-12)
+
+- `TruSEOScore` schrijft `_sseo_ai_title` nu als `<title>` (`pre_get_document_title`, prio 15) en `_sseo_ai_description` als `<meta name="description">` (wp_head prio 1) op singular-views en de blogpagina; doet niets als Yoast/Rank Math/AIOSEO/SEOPress actief is. Voorheen werden deze velden alleen voor OG/schema gebruikt.
+- `SchemaMarkup::saveSchemaMeta()`: `wp_unslash()` vóór JSON-validatie (en `wp_slash()` bij opslaan); voorheen werd elk custom schema met `"` stil weggegooid. Leeg veld verwijdert de meta.

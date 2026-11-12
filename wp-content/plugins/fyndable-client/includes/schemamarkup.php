@@ -85,9 +85,13 @@ class SchemaMarkup
             update_post_meta($postId, '_sseo_ai_schema_type', sanitize_text_field($_POST['aiseo_schema_type']));
         }
         if (isset($_POST['aiseo_custom_schema'])) {
-            $custom = sanitize_textarea_field($_POST['aiseo_custom_schema']);
-            if ($this->isValidJson($custom)) {
-                update_post_meta($postId, '_sseo_ai_custom_schema', $custom);
+            // $_POST is slashed by WordPress: unslash before validating, re-slash for update_post_meta
+            // (which unslashes again) so escaped characters inside JSON strings survive.
+            $custom = trim(sanitize_textarea_field(wp_unslash($_POST['aiseo_custom_schema'])));
+            if ($custom === '') {
+                delete_post_meta($postId, '_sseo_ai_custom_schema');
+            } elseif ($this->isValidJson($custom)) {
+                update_post_meta($postId, '_sseo_ai_custom_schema', wp_slash($custom));
             }
         }
     }
