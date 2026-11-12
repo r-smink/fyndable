@@ -169,6 +169,8 @@ class GeoScanRepository
                     'user_agent'   => $meta['user_agent'] ?? '',
                     'name'         => sanitize_text_field($meta['name'] ?? ''),
                     'company'      => sanitize_text_field($meta['company'] ?? ''),
+                    // Optional brand name: AI answers that name the brand (without a link) count as a mention.
+                    'brand'        => sanitize_text_field($meta['brand'] ?? ''),
                     'keywords'     => $keywords,
                     // Unguessable token used to authorize polling the public
                     // status endpoint — the numeric scan id alone is enumerable.
@@ -446,6 +448,70 @@ class GeoScanRepository
         }
 
         return $rows ?: [];
+    }
+
+    /**
+     * One page of scans for the admin overview (newest first), filtered like getRecent().
+     */
+    public function getPage(string $source, ?int $userId, int $perPage, int $page): array
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+        $perPage = max(1, min(100, $perPage));
+        $offset = max(0, ($page - 1) * $perPage);
+
+        if ($userId !== null) {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE source = %s AND user_id = %d ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
+                $source,
+                $userId,
+                $perPage,
+                $offset
+            );
+        } else {
+            $sql = $wpdb->prepare(
+                "SELECT * FROM {$table} WHERE source = %s ORDER BY created_at DESC, id DESC LIMIT %d OFFSET %d",
+                $source,
+                $perPage,
+                $offset
+            );
+        }
+
+        $rows = $wpdb->get_results($sql, ARRAY_A) ?: [];
+        foreach ($rows as &$row) {
+            $row['result'] = !empty($row['result']) ? json_decode($row['result'], true) : [];
+            $row['meta'] = !empty($row['meta']) ? json_decode($row['meta'], true) : [];
+        }
+
+        return $rows;
+    }
+
+    public function count(string $source, ?int $userId = null): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+
+        if ($userId !== null) {
+            return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE source = %s AND user_id = %d", $source, $userId));
+        }
+
+        return (int)$wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE source = %s", $source));
+    }
+
+    /**
+     * Permanently delete the given scans. Access checks happen in the caller.
+     */
+    public function deleteByIds(array $ids): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $id): bool => $id > 0)));
+        if (!$ids) {
+            return 0;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '%d'));
+        return (int)$wpdb->query($wpdb->prepare("DELETE FROM {$table} WHERE id IN ({$placeholders})", $ids));
     }
 
     /**

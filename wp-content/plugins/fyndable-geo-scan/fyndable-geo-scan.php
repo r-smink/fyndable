@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fyndable GEO Scan
  * Description: Free GEO Readiness scan widget for fyndable.ai — runs scans via the Fyndable SaaS portal and collects leads (email + consent).
- * Version: 0.2.0
+ * Version: 0.3.0
  * Requires at least: 6.0
  * Requires PHP: 8.0
  * Author: Fyndable
@@ -13,7 +13,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('FYNDABLE_GEOSCAN_VERSION', '0.2.0');
+define('FYNDABLE_GEOSCAN_VERSION', '0.3.0');
 define('FYNDABLE_GEOSCAN_PLUGIN_FILE', __FILE__);
 define('FYNDABLE_GEOSCAN_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('FYNDABLE_GEOSCAN_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -22,7 +22,12 @@ define('FYNDABLE_GEOSCAN_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('FYNDABLE_GEOSCAN_PORTAL_URL_OPTION', 'fyndable_geoscan_portal_url');
 define('FYNDABLE_GEOSCAN_API_KEY_OPTION', 'fyndable_geoscan_api_key');
 
+// Admin notification when a visitor submits the scan form
+define('FYNDABLE_GEOSCAN_NOTIFY_ENABLED_OPTION', 'fyndable_geoscan_notify_enabled');
+define('FYNDABLE_GEOSCAN_NOTIFY_EMAIL_OPTION', 'fyndable_geoscan_notify_email');
+
 require_once FYNDABLE_GEOSCAN_PLUGIN_DIR . 'includes/settings.php';
+require_once FYNDABLE_GEOSCAN_PLUGIN_DIR . 'includes/notifier.php';
 require_once FYNDABLE_GEOSCAN_PLUGIN_DIR . 'includes/widget.php';
 
 add_action('plugins_loaded', function (): void {

@@ -42,6 +42,7 @@ class GeoScanAdmin
         add_action('admin_post_sseo_geo_scan_save_website', [$this, 'handleSaveWebsiteSettings']);
         add_action('admin_post_sseo_geo_scan_save_multi_model', [$this, 'handleSaveMultiModel']);
         add_action('admin_post_sseo_geo_scan_download_pdf', [$this, 'handleDownloadPdf']);
+        add_action('admin_post_sseo_geo_scan_delete', [$this, 'handleDelete']);
     }
 
     /**
@@ -117,8 +118,7 @@ class GeoScanAdmin
         // Agency partners only see the scans they started themselves; website
         // leads and the provider settings below are provider-only.
         $isProvider = $this->isProvider();
-        $recentScans = $this->repository->getRecent(20, 'admin', $isProvider ? null : get_current_user_id());
-        $websiteScans = $isProvider ? $this->repository->getRecent(50, 'website') : [];
+        $viewMode = $this->viewMode();
         $websiteKey = $this->settings->getWebsiteScanKey();
         $publicEndpoint = rest_url('ai-seo-saas/v1/public/geo-scan');
         $saasShell = isset($_GET['saas_shell']) ? '&saas_shell=1' : '';
@@ -148,6 +148,13 @@ class GeoScanAdmin
                         <th scope="row"><label for="sseo_geo_url"><?php esc_html_e('Prospect URL', 'sseo-ai-saas'); ?></label></th>
                         <td>
                             <input type="url" name="url" id="sseo_geo_url" class="regular-text" placeholder="https://example.com" required>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="sseo_geo_brand"><?php esc_html_e('Merknaam (optioneel)', 'sseo-ai-saas'); ?></label></th>
+                        <td>
+                            <input type="text" name="brand" id="sseo_geo_brand" class="regular-text" maxlength="100" placeholder="<?php esc_attr_e('Bijv. NorthGear', 'sseo-ai-saas'); ?>">
+                            <p class="description"><?php esc_html_e('Een AI-antwoord dat deze naam noemt telt als vermelding, ook zonder link. De domeinnaam (zonder extensie) wordt altijd al herkend; vul dit in als de merknaam daarvan afwijkt.', 'sseo-ai-saas'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -186,112 +193,14 @@ class GeoScanAdmin
 
             <div id="sseo-geo-scan-error" class="sseo-geo-error" style="display:none;"></div>
 
-            <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Recent Scans', 'sseo-ai-saas'); ?></h2>
-                <?php if (empty($recentScans)) : ?>
-                    <p><?php esc_html_e('No scans yet.', 'sseo-ai-saas'); ?></p>
-                <?php else : ?>
-                    <table class="wp-list-table widefat fixed striped sseo-geo-scans-table">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('URL', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Keywords', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Score', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($recentScans as $scan) :
-                                $score = (int)($scan['score'] ?? 0);
-                                $status = $scan['status'] ?? 'completed';
-                                $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id'] . $saasShell);
-                            ?>
-                            <tr>
-                                <td><?php echo esc_html($scan['created_at']); ?></td>
-                                <td><?php echo esc_url($scan['url']); ?></td>
-                                <td><?php echo esc_html($scan['keywords']); ?></td>
-                                <td><?php $this->renderStatusBadge($status, (int)($scan['progress'] ?? 0), $scan['progress_label'] ?? '', $scan['error'] ?? ''); ?></td>
-                                <td><?php echo $status === 'completed' ? esc_html($score . '/100') : '—'; ?></td>
-                                <td>
-                                    <?php if ($status === 'completed') : ?>
-                                        <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
-                                        <button type="button" class="button button-small sseo-geo-pdf-open" data-pdf-url="<?php echo esc_url($this->getPdfUrl((int)$scan['id'])); ?>"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
-                                    <?php else : ?>
-                                        —
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
+            <?php if (!empty($_GET['deleted'])) : ?>
+                <div class="notice notice-success is-dismissible"><p><?php echo esc_html(sprintf(_n('%d scan verwijderd.', '%d scans verwijderd.', (int)$_GET['deleted'], 'sseo-ai-saas'), (int)$_GET['deleted'])); ?></p></div>
+            <?php endif; ?>
+
+            <?php $this->renderScanSection('admin', $isProvider ? null : get_current_user_id(), $viewMode, $saasShell); ?>
 
             <?php if ($isProvider) : ?>
-            <div class="sseo-ai-card">
-                <h2><?php esc_html_e('Website Scans', 'sseo-ai-saas'); ?></h2>
-                <p class="description"><?php esc_html_e('Scans aangevraagd via het publieke formulier op fyndable.ai. Bevat contactgegevens voor follow-up.', 'sseo-ai-saas'); ?></p>
-                <?php if (empty($websiteScans)) : ?>
-                    <p><?php esc_html_e('Nog geen website-scans.', 'sseo-ai-saas'); ?></p>
-                <?php else : ?>
-                    <table class="wp-list-table widefat fixed striped sseo-geo-scans-table">
-                        <thead>
-                            <tr>
-                                <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('E-mail', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('URL', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Keywords', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Score', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Consent', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($websiteScans as $scan) :
-                                $score = (int)($scan['score'] ?? 0);
-                                $status = $scan['status'] ?? 'completed';
-                                $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . (int)$scan['id'] . $saasShell);
-                            ?>
-                            <tr>
-                                <td><?php echo esc_html($scan['created_at']); ?></td>
-                                <td>
-                                    <a href="mailto:<?php echo esc_attr($scan['email']); ?>"><?php echo esc_html($scan['email']); ?></a>
-                                    <?php
-                                    $leadName = trim((string)($scan['meta']['name'] ?? ''));
-                                    $leadCompany = trim((string)($scan['meta']['company'] ?? ''));
-                                    if ($leadName !== '' || $leadCompany !== '') :
-                                    ?>
-                                    <br><span class="description"><?php echo esc_html(trim($leadName . ($leadCompany !== '' ? ' · ' . $leadCompany : ''))); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td><?php echo esc_url($scan['url']); ?></td>
-                                <td><?php echo esc_html($scan['keywords']); ?></td>
-                                <td><?php $this->renderStatusBadge($status, (int)($scan['progress'] ?? 0), $scan['progress_label'] ?? '', $scan['error'] ?? ''); ?></td>
-                                <td><?php echo $status === 'completed' ? esc_html($score . '/100') : '—'; ?></td>
-                                <td>
-                                    <?php if (!empty($scan['consent'])) : ?>
-                                        <span class="sseo-geo-status yes" title="<?php echo esc_attr($scan['consent_at'] ?? ''); ?>"><?php esc_html_e('Ja', 'sseo-ai-saas'); ?></span>
-                                    <?php else : ?>
-                                        <span class="sseo-geo-status no"><?php esc_html_e('Nee', 'sseo-ai-saas'); ?></span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php if ($status === 'completed') : ?>
-                                        <a href="<?php echo esc_url($viewUrl); ?>" class="button button-small"><?php esc_html_e('View Report', 'sseo-ai-saas'); ?></a>
-                                        <button type="button" class="button button-small sseo-geo-pdf-open" data-pdf-url="<?php echo esc_url($this->getPdfUrl((int)$scan['id'])); ?>"><?php esc_html_e('Download PDF', 'sseo-ai-saas'); ?></button>
-                                    <?php else : ?>
-                                        —
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                <?php endif; ?>
-            </div>
+            <?php $this->renderScanSection('website', null, $viewMode, $saasShell); ?>
 
             <?php
             // Multi-model settings
@@ -434,6 +343,223 @@ class GeoScanAdmin
         <?php
     }
 
+    private const PER_PAGE = ['list' => 15, 'cards' => 12];
+    private const VIEW_META = 'sseo_geo_scan_view';
+
+    /** Lijst of kaarten: ?geo_view= wint en wordt per gebruiker onthouden. */
+    private function viewMode(): string
+    {
+        $requested = isset($_GET['geo_view']) ? sanitize_key($_GET['geo_view']) : '';
+        if (in_array($requested, ['list', 'cards'], true)) {
+            update_user_meta(get_current_user_id(), self::VIEW_META, $requested);
+            return $requested;
+        }
+        $stored = (string)get_user_meta(get_current_user_id(), self::VIEW_META, true);
+        return $stored === 'cards' ? 'cards' : 'list';
+    }
+
+    /** Paginaparameter per sectie, zodat beide overzichten los van elkaar bladeren. */
+    private function pageParam(string $source): string
+    {
+        return $source === 'website' ? 'web_page' : 'admin_page';
+    }
+
+    /**
+     * URL van de overzichtspagina met de huidige weergave en paginering; $overrides vervangt losse parameters.
+     */
+    private function overviewUrl(array $overrides = []): string
+    {
+        $args = ['page' => 'sseo-ai-geo-scan'];
+        foreach (['geo_view', 'admin_page', 'web_page', 'saas_shell'] as $key) {
+            if (isset($_REQUEST[$key]) && $_REQUEST[$key] !== '') {
+                $args[$key] = sanitize_key((string)$_REQUEST[$key]);
+            }
+        }
+        return add_query_arg(array_merge($args, $overrides), admin_url('admin.php'));
+    }
+
+    /**
+     * Eén overzicht (eigen/admin-scans of website-leads) als lijst of kaarten, met paginering,
+     * bulk- en losse verwijderknoppen.
+     */
+    private function renderScanSection(string $source, ?int $userId, string $viewMode, string $saasShell): void
+    {
+        $isWebsite = $source === 'website';
+        $perPage = self::PER_PAGE[$viewMode];
+        $total = $this->repository->count($source, $userId);
+        $pages = max(1, (int)ceil($total / $perPage));
+        $pageParam = $this->pageParam($source);
+        $current = min($pages, max(1, (int)($_GET[$pageParam] ?? 1)));
+        $scans = $total > 0 ? $this->repository->getPage($source, $userId, $perPage, $current) : [];
+        $formId = 'sseo-geo-delete-' . $source;
+        $confirmOne = __('Deze scan definitief verwijderen? Dit kan niet ongedaan worden gemaakt.', 'sseo-ai-saas');
+        $confirmBulk = __('De geselecteerde scans definitief verwijderen? Dit kan niet ongedaan worden gemaakt.', 'sseo-ai-saas');
+        ?>
+        <div class="sseo-ai-card sseo-geo-section">
+            <div class="sseo-geo-section-head">
+                <div>
+                    <h2><?php echo $isWebsite ? esc_html__('Website Scans', 'sseo-ai-saas') : esc_html__('Recent Scans', 'sseo-ai-saas'); ?></h2>
+                    <?php if ($isWebsite) : ?>
+                        <p class="description"><?php esc_html_e('Scans aangevraagd via het publieke formulier op fyndable.ai. Bevat contactgegevens voor follow-up.', 'sseo-ai-saas'); ?></p>
+                    <?php endif; ?>
+                </div>
+                <div class="sseo-geo-view-toggle" role="group" aria-label="<?php esc_attr_e('Weergave', 'sseo-ai-saas'); ?>">
+                    <a href="<?php echo esc_url($this->overviewUrl(['geo_view' => 'list'])); ?>" class="button<?php echo $viewMode === 'list' ? ' is-active' : ''; ?>" aria-pressed="<?php echo $viewMode === 'list' ? 'true' : 'false'; ?>"><span class="dashicons dashicons-list-view"></span> <?php esc_html_e('Lijst', 'sseo-ai-saas'); ?></a>
+                    <a href="<?php echo esc_url($this->overviewUrl(['geo_view' => 'cards'])); ?>" class="button<?php echo $viewMode === 'cards' ? ' is-active' : ''; ?>" aria-pressed="<?php echo $viewMode === 'cards' ? 'true' : 'false'; ?>"><span class="dashicons dashicons-grid-view"></span> <?php esc_html_e('Kaarten', 'sseo-ai-saas'); ?></a>
+                </div>
+            </div>
+
+            <?php if ($total === 0) : ?>
+                <p><?php echo $isWebsite ? esc_html__('Nog geen website-scans.', 'sseo-ai-saas') : esc_html__('No scans yet.', 'sseo-ai-saas'); ?></p>
+            <?php else : ?>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" id="<?php echo esc_attr($formId); ?>" class="sseo-geo-delete-form">
+                <input type="hidden" name="action" value="sseo_geo_scan_delete">
+                <?php wp_nonce_field('sseo_geo_scan_delete', 'sseo_geo_delete_nonce'); ?>
+                <?php foreach (['geo_view' => $viewMode, 'admin_page' => (int)($_GET['admin_page'] ?? 1), 'web_page' => (int)($_GET['web_page'] ?? 1)] as $key => $value) : ?>
+                    <input type="hidden" name="<?php echo esc_attr($key); ?>" value="<?php echo esc_attr((string)$value); ?>">
+                <?php endforeach; ?>
+                <?php if ($saasShell !== '') : ?><input type="hidden" name="saas_shell" value="1"><?php endif; ?>
+
+                <div class="sseo-geo-bulk">
+                    <label class="sseo-geo-select-all"><input type="checkbox" data-geo-select-all="<?php echo esc_attr($formId); ?>"> <?php esc_html_e('Alles op deze pagina', 'sseo-ai-saas'); ?></label>
+                    <button type="submit" class="button" name="bulk_delete" value="1" data-confirm="<?php echo esc_attr($confirmBulk); ?>" data-empty="<?php esc_attr_e('Selecteer eerst een of meer scans.', 'sseo-ai-saas'); ?>"><?php esc_html_e('Geselecteerde verwijderen', 'sseo-ai-saas'); ?></button>
+                    <span class="sseo-geo-count"><?php echo esc_html(sprintf(_n('%d scan', '%d scans', $total, 'sseo-ai-saas'), $total)); ?></span>
+                </div>
+
+                <?php if ($viewMode === 'list') : ?>
+                <table class="wp-list-table widefat fixed striped sseo-geo-scans-table">
+                    <thead>
+                        <tr>
+                            <td class="check-column"><span class="screen-reader-text"><?php esc_html_e('Selecteren', 'sseo-ai-saas'); ?></span></td>
+                            <th><?php esc_html_e('Date', 'sseo-ai-saas'); ?></th>
+                            <?php if ($isWebsite) : ?><th><?php esc_html_e('E-mail', 'sseo-ai-saas'); ?></th><?php endif; ?>
+                            <th><?php esc_html_e('URL', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Keywords', 'sseo-ai-saas'); ?></th>
+                            <th><?php esc_html_e('Status', 'sseo-ai-saas'); ?></th>
+                            <th class="sseo-geo-col-score"><?php esc_html_e('Score', 'sseo-ai-saas'); ?></th>
+                            <?php if ($isWebsite) : ?><th class="sseo-geo-col-consent"><?php esc_html_e('Consent', 'sseo-ai-saas'); ?></th><?php endif; ?>
+                            <th class="sseo-geo-col-actions"><?php esc_html_e('Actions', 'sseo-ai-saas'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($scans as $scan) : $status = (string)($scan['status'] ?? 'completed'); ?>
+                        <tr>
+                            <th scope="row" class="check-column"><input type="checkbox" name="scan_ids[]" value="<?php echo (int)$scan['id']; ?>"></th>
+                            <td><?php echo esc_html((string)$scan['created_at']); ?></td>
+                            <?php if ($isWebsite) : ?><td><?php $this->renderLead($scan); ?></td><?php endif; ?>
+                            <td class="sseo-geo-url"><?php echo esc_html((string)$scan['url']); ?></td>
+                            <td><?php echo esc_html((string)$scan['keywords']); ?></td>
+                            <td><?php $this->renderStatusBadge($status, (int)($scan['progress'] ?? 0), (string)($scan['progress_label'] ?? ''), (string)($scan['error'] ?? '')); ?></td>
+                            <td><?php echo $status === 'completed' ? esc_html((int)($scan['score'] ?? 0) . '/100') : '—'; ?></td>
+                            <?php if ($isWebsite) : ?><td><?php $this->renderConsent($scan, false); ?></td><?php endif; ?>
+                            <td class="sseo-geo-actions"><?php $this->renderScanActions($scan, $saasShell, $confirmOne); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php else : ?>
+                <div class="sseo-geo-cards">
+                    <?php foreach ($scans as $scan) : $status = (string)($scan['status'] ?? 'completed'); $host = (string)(wp_parse_url((string)$scan['url'], PHP_URL_HOST) ?: $scan['url']); ?>
+                    <div class="sseo-geo-scan-card">
+                        <div class="sseo-geo-scan-card-top">
+                            <label class="sseo-geo-card-check"><input type="checkbox" name="scan_ids[]" value="<?php echo (int)$scan['id']; ?>"><span class="screen-reader-text"><?php esc_html_e('Selecteren', 'sseo-ai-saas'); ?></span></label>
+                            <div class="sseo-geo-scan-card-title">
+                                <strong title="<?php echo esc_attr((string)$scan['url']); ?>"><?php echo esc_html(preg_replace('/^www\./i', '', $host)); ?></strong>
+                                <span><?php echo esc_html((string)$scan['created_at']); ?></span>
+                            </div>
+                            <div class="sseo-geo-scan-card-score<?php echo $status === 'completed' ? '' : ' is-empty'; ?>"><?php echo $status === 'completed' ? (int)($scan['score'] ?? 0) : '—'; ?></div>
+                        </div>
+                        <div class="sseo-geo-scan-card-body">
+                            <?php $this->renderStatusBadge($status, (int)($scan['progress'] ?? 0), (string)($scan['progress_label'] ?? ''), (string)($scan['error'] ?? '')); ?>
+                            <?php if ($isWebsite) : ?><?php $this->renderConsent($scan); ?><?php endif; ?>
+                            <p class="sseo-geo-scan-card-keywords"><?php echo esc_html((string)$scan['keywords']); ?></p>
+                            <?php if ($isWebsite) : ?><div class="sseo-geo-scan-card-lead"><?php $this->renderLead($scan); ?></div><?php endif; ?>
+                        </div>
+                        <div class="sseo-geo-scan-card-actions"><?php $this->renderScanActions($scan, $saasShell, $confirmOne); ?></div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+            </form>
+
+            <?php if ($pages > 1) : ?>
+            <div class="tablenav bottom sseo-geo-pagination"><div class="tablenav-pages">
+                <span class="displaying-num"><?php echo esc_html(sprintf(__('Pagina %1$d van %2$d', 'sseo-ai-saas'), $current, $pages)); ?></span>
+                <span class="pagination-links"><?php
+                    echo paginate_links([
+                        'base'      => str_replace('999999999', '%#%', $this->overviewUrl([$pageParam => 999999999])),
+                        'format'    => '',
+                        'current'   => $current,
+                        'total'     => $pages,
+                        'prev_text' => '&lsaquo;',
+                        'next_text' => '&rsaquo;',
+                        'mid_size'  => 1,
+                    ]); // phpcs:ignore WordPress.Security.EscapeOutput -- paginate_links escapes its own output
+                ?></span>
+            </div></div>
+            <?php endif; ?>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    private function renderLead(array $scan): void
+    {
+        $email = (string)($scan['email'] ?? '');
+        if ($email !== '') {
+            echo '<a href="mailto:' . esc_attr($email) . '">' . esc_html($email) . '</a>';
+        }
+        $name = trim((string)($scan['meta']['name'] ?? ''));
+        $company = trim((string)($scan['meta']['company'] ?? ''));
+        if ($name !== '' || $company !== '') {
+            echo '<br><span class="description">' . esc_html(trim($name . ($company !== '' ? ' · ' . $company : ''))) . '</span>';
+        }
+    }
+
+    /** Consent-badge; in de lijst staat het label al in de kolomkop, in een kaart niet. */
+    private function renderConsent(array $scan, bool $withLabel = true): void
+    {
+        if (!empty($scan['consent'])) {
+            $text = $withLabel ? __('Consent: ja', 'sseo-ai-saas') : __('Ja', 'sseo-ai-saas');
+            echo '<span class="sseo-geo-status yes" title="' . esc_attr((string)($scan['consent_at'] ?? '')) . '">' . esc_html($text) . '</span>';
+        } else {
+            $text = $withLabel ? __('Consent: nee', 'sseo-ai-saas') : __('Nee', 'sseo-ai-saas');
+            echo '<span class="sseo-geo-status no">' . esc_html($text) . '</span>';
+        }
+    }
+
+    private function renderScanActions(array $scan, string $saasShell, string $confirmOne): void
+    {
+        $scanId = (int)$scan['id'];
+        if (($scan['status'] ?? '') === 'completed') {
+            $viewUrl = admin_url('admin.php?page=sseo-ai-geo-scan&view=report&scan_id=' . $scanId . $saasShell);
+            echo '<a href="' . esc_url($viewUrl) . '" class="button button-small">' . esc_html__('View Report', 'sseo-ai-saas') . '</a> ';
+            echo '<button type="button" class="button button-small sseo-geo-pdf-open" data-pdf-url="' . esc_url($this->getPdfUrl($scanId)) . '">' . esc_html__('Download PDF', 'sseo-ai-saas') . '</button> ';
+        }
+        echo '<button type="submit" class="button button-small button-link-delete sseo-geo-delete" name="delete_one" value="' . $scanId . '" onclick="return confirm(' . esc_attr(wp_json_encode($confirmOne)) . ');">' . esc_html__('Verwijderen', 'sseo-ai-saas') . '</button>';
+    }
+
+    /**
+     * admin-post: definitief verwijderen van één scan (delete_one) of de aangevinkte scans (scan_ids[]).
+     * Alleen scans die de gebruiker mag openen (canAccessScan) worden verwijderd.
+     */
+    public function handleDelete(): void
+    {
+        if (!current_user_can('agency_geo_scan') && !current_user_can('manage_options')) {
+            wp_die(esc_html__('Je hebt geen toestemming om scans te verwijderen.', 'sseo-ai-saas'), 403);
+        }
+        check_admin_referer('sseo_geo_scan_delete', 'sseo_geo_delete_nonce');
+
+        $ids = !empty($_POST['delete_one'])
+            ? [(int)$_POST['delete_one']]
+            : array_map('intval', (array)($_POST['scan_ids'] ?? []));
+        $allowed = array_values(array_filter($ids, fn(int $id): bool => $id > 0 && $this->canAccessScan($this->repository->getStatus($id))));
+        $deleted = $this->repository->deleteByIds($allowed);
+
+        wp_safe_redirect($this->overviewUrl(['deleted' => $deleted]));
+        exit;
+    }
+
     private function isProvider(): bool
     {
         return current_user_can('manage_options');
@@ -542,6 +668,7 @@ class GeoScanAdmin
         $scanId = $this->repository->insertQueued($url, $keywords, $language, [
             'source'  => 'admin',
             'user_id' => get_current_user_id(),
+            'brand'   => sanitize_text_field(wp_unslash($_POST['brand'] ?? '')),
         ]);
         $this->queue->enqueue($scanId);
 

@@ -106,6 +106,7 @@
                     url: $('#sseo_geo_url').val().trim(),
                     keywords: $('#sseo_geo_keywords').val().trim(),
                     language: $('#sseo_geo_language').val(),
+                    brand: ($('#sseo_geo_brand').val() || '').trim(),
                     saas_shell: saasShell
                 }
             })
@@ -245,6 +246,24 @@
             $countText.html(
                 'Momenteel ' + count + ' model(len) geselecteerd. Kosten per scan: ~' + multiplier + 'x de normale prijs.'
             );
+        }
+    });
+
+    // Overzicht: "alles op deze pagina" (de)selecteert de vinkjes van dat ene overzicht.
+    $(document).on('change', '[data-geo-select-all]', function () {
+        $('#' + $(this).data('geo-select-all')).find('input[name="scan_ids[]"]').prop('checked', this.checked);
+    });
+
+    // Bulk verwijderen: eerst een selectie vereisen, dan bevestigen.
+    $(document).on('click', '.sseo-geo-delete-form button[name="bulk_delete"]', function (event) {
+        var $button = $(this);
+        if (!$button.closest('form').find('input[name="scan_ids[]"]:checked').length) {
+            event.preventDefault();
+            window.alert($button.data('empty'));
+            return;
+        }
+        if (!window.confirm($button.data('confirm'))) {
+            event.preventDefault();
         }
     });
 })(jQuery);

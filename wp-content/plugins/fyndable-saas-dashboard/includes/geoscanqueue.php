@@ -99,7 +99,12 @@ class GeoScanQueue
             (string)($scan['language'] ?? 'auto'),
             null,
             $scanId,
-            (string)($scan['source'] ?? 'admin')
+            (string)($scan['source'] ?? 'admin'),
+            // Brand names for mention detection: explicit brand (admin form) and the lead's company (website form).
+            array_values(array_filter([
+                trim((string)($scan['meta']['brand'] ?? '')),
+                ($scan['source'] ?? '') === 'website' ? trim((string)($scan['meta']['company'] ?? '')) : '',
+            ]))
         );
 
         delete_transient($lockKey);

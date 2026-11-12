@@ -33,23 +33,37 @@ class AlertNotifier
     }
 
     /**
-     * Send an alert notification
+     * Send an alert notification. Respects Settings → E-mail & reports (on/off, max per day) and
+     * sends an identical message at most once per hour, so a failing provider cannot flood the inbox.
      */
     public function send(string $message): bool
     {
-        if (empty($this->adminEmail)) {
+        if (empty($this->adminEmail) || !EmailSettings::isEnabled('alert')) {
             return false;
         }
 
-        $whiteLabel = get_option('sseo_ai_white_label', []);
-        $companyName = !empty($whiteLabel['company_name']) ? $whiteLabel['company_name'] : 'Fyndable';
-        $subject = sprintf(__('%s Alert', 'ai-seo-client'), $companyName);
+        $dedupeKey = 'sseo_ai_alert_' . md5($message);
+        if (get_transient($dedupeKey)) {
+            return false;
+        }
+        $countKey = 'sseo_ai_alert_count_' . gmdate('Ymd');
+        $count = (int)get_transient($countKey);
+        if ($count >= EmailSettings::alertsMaxPerDay()) {
+            return false;
+        }
 
-        return wp_mail(
-            $this->adminEmail,
-            $subject,
-            $message
+        $subject = sprintf(__('%s Alert', 'ai-seo-client'), EmailSettings::brandName());
+        $body = $message . "\n\n" . sprintf(
+            __('Change or switch off these e-mails: %s', 'ai-seo-client'),
+            admin_url('admin.php?page=ai-seo-settings#sseo-email-settings')
         );
+
+        $sent = Mailer::send('alert', $this->adminEmail, $subject, $body);
+        if ($sent) {
+            set_transient($dedupeKey, 1, HOUR_IN_SECONDS);
+            set_transient($countKey, $count + 1, DAY_IN_SECONDS);
+        }
+        return $sent;
     }
 
     /**

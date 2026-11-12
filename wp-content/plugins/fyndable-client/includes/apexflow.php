@@ -1594,7 +1594,8 @@ Keywords:
             );
         }
 
-        wp_mail(
+        Mailer::send(
+            'apexflow',
             $email,
             sprintf(__('%s ApexFlow: %d posts scheduled', 'ai-seo-client'), $company, count($entries)),
             sprintf(

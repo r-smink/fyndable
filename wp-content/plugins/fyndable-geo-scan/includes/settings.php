@@ -37,6 +37,16 @@ class Settings
             'sanitize_callback' => 'sanitize_text_field',
             'default' => '',
         ]);
+        register_setting('fyndable_geoscan', FYNDABLE_GEOSCAN_NOTIFY_ENABLED_OPTION, [
+            'type' => 'boolean',
+            'sanitize_callback' => fn($v) => !empty($v),
+            'default' => true,
+        ]);
+        register_setting('fyndable_geoscan', FYNDABLE_GEOSCAN_NOTIFY_EMAIL_OPTION, [
+            'type' => 'string',
+            'sanitize_callback' => [Notifier::class, 'sanitizeRecipients'],
+            'default' => '',
+        ]);
     }
 
     public function render(): void
@@ -67,6 +77,26 @@ class Settings
                                    name="<?php echo esc_attr(FYNDABLE_GEOSCAN_API_KEY_OPTION); ?>"
                                    value="<?php echo esc_attr($apiKey); ?>">
                             <p class="description"><?php esc_html_e('Te vinden in het portaal onder GEO Scan → Website Scan integratie.', 'fyndable-geo-scan'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><?php esc_html_e('Melding bij nieuwe aanvraag', 'fyndable-geo-scan'); ?></th>
+                        <td>
+                            <input type="hidden" name="<?php echo esc_attr(FYNDABLE_GEOSCAN_NOTIFY_ENABLED_OPTION); ?>" value="0">
+                            <label>
+                                <input type="checkbox" name="<?php echo esc_attr(FYNDABLE_GEOSCAN_NOTIFY_ENABLED_OPTION); ?>" value="1" <?php checked(Notifier::enabled()); ?>>
+                                <?php esc_html_e('Stuur een e-mail zodra een bezoeker het scanformulier verstuurt', 'fyndable-geo-scan'); ?>
+                            </label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="fyndable_geoscan_notify_email"><?php esc_html_e('Ontvanger(s)', 'fyndable-geo-scan'); ?></label></th>
+                        <td>
+                            <input type="text" class="regular-text" id="fyndable_geoscan_notify_email"
+                                   name="<?php echo esc_attr(FYNDABLE_GEOSCAN_NOTIFY_EMAIL_OPTION); ?>"
+                                   value="<?php echo esc_attr((string)get_option(FYNDABLE_GEOSCAN_NOTIFY_EMAIL_OPTION, '')); ?>"
+                                   placeholder="<?php echo esc_attr((string)get_option('admin_email')); ?>">
+                            <p class="description"><?php esc_html_e('Meerdere adressen scheiden met een komma. Leeg = het beheerdersadres van deze site. De mail gaat via de mailinstellingen van deze site; met Beantwoorden mail je direct de aanvrager.', 'fyndable-geo-scan'); ?></p>
                         </td>
                     </tr>
                 </table>

@@ -381,7 +381,10 @@ class Client
         // External Integrations - available to all tiers
         $this->externalIntegrations = new ExternalIntegrations($this->settings);
         $this->externalIntegrations->register();
-        
+
+        // Settings → E-mail & reports (report frequency, notifications, sender, mail status, test mail)
+        (new EmailSettings($this->externalIntegrations))->register();
+
         // Google OAuth (used by Direct Index and External Integrations) - available to all tiers
         $gscOAuth = new GscOAuth($this->settings);
         $gscOAuth->register();
@@ -2614,6 +2617,12 @@ class Client
                             <?php do_action('sseo_ai_render_llmstxt_settings'); ?>
                         </div>
 
+                        <?php if (has_action('sseo_ai_render_email_settings')) : ?>
+                        <div class="fyn-card" id="sseo-email-settings" style="margin-bottom:20px;">
+                            <?php do_action('sseo_ai_render_email_settings'); ?>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="fyn-card" style="margin-bottom:20px;">
                             <div class="fyn-card-header"><span class="dashicons dashicons-art"></span><h3 class="fyn-card-title"><?php esc_html_e('Appearance', 'ai-seo-client'); ?></h3></div>
                             <p style="font-size:13px;color:var(--text-m);margin:0 0 16px;"><?php esc_html_e('Customize the appearance of the Fyndable backend.', 'ai-seo-client'); ?></p>
@@ -3001,6 +3010,9 @@ class Client
         }
         $llmstxtSelectedPages = array_values(array_filter(array_map('absint', $llmstxtSelectedPages)));
         update_option('sseo_ai_client_llmstxt_selected_pages', $llmstxtSelectedPages);
+
+        // E-mail & reports card (EmailSettings::save)
+        do_action('sseo_ai_save_email_settings', $_POST);
 
         // Invalidate llms.txt caches so changes take effect immediately
         if ($this->llmsTxt instanceof LlmsTxt) {

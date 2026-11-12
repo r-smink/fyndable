@@ -50,6 +50,12 @@ class ExternalIntegrations
         add_action('sseo_ai_weekly_report', [$this, 'sendWeeklyReport']);
         add_action('sseo_ai_monthly_report', [$this, 'sendMonthlyReport']);
 
+        // WordPress has no 'monthly' recurrence: without it the monthly event was never scheduled.
+        add_filter('cron_schedules', static function (array $schedules): array {
+            $schedules['monthly'] ??= ['interval' => 30 * DAY_IN_SECONDS, 'display' => __('Once a month', 'ai-seo-client')];
+            return $schedules;
+        });
+
         // Schedule cron jobs
         if (!wp_next_scheduled('sseo_ai_daily_report')) {
             wp_schedule_event(strtotime('tomorrow 9:00'), 'daily', 'sseo_ai_daily_report');
@@ -89,11 +95,9 @@ class ExternalIntegrations
         register_setting('sseo_ai_integrations', 'sseo_ai_make_webhook_url');
         register_setting('sseo_ai_integrations', 'sseo_ai_custom_webhooks', ['default' => []]);
         
-        // Email
-        register_setting('sseo_ai_integrations', 'sseo_ai_report_email');
-        register_setting('sseo_ai_integrations', 'sseo_ai_report_frequency', ['default' => 'weekly']);
-        register_setting('sseo_ai_integrations', 'sseo_ai_email_notifications', ['default' => []]);
-        
+        // E-mail reports moved to Settings → E-mail & reports (EmailSettings). They must NOT be registered
+        // in this group anymore: options.php would save them as empty when this page (without the fields) is saved.
+
         // Google Drive
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_folder_id');
         register_setting('sseo_ai_integrations', 'sseo_ai_gdrive_auto_export', ['default' => false]);
@@ -183,13 +187,6 @@ class ExternalIntegrations
         $customWebhooks = get_option('sseo_ai_custom_webhooks', []);
         if (!is_array($customWebhooks)) {
             $customWebhooks = [];
-        }
-        
-        $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
-        $reportFrequency = get_option('sseo_ai_report_frequency', 'weekly');
-        $emailNotifications = get_option('sseo_ai_email_notifications', []);
-        if (!is_array($emailNotifications)) {
-            $emailNotifications = [];
         }
         
         $gdriveFolderId = get_option('sseo_ai_gdrive_folder_id', '');
@@ -393,64 +390,14 @@ class ExternalIntegrations
                         <!-- Email Reports -->
                         <div class="fyn-card">
                             <h2><?php esc_html_e('Email Reports', 'ai-seo-client'); ?></h2>
-                    
-                    <table class="form-table">
-                        <tr>
-                            <th scope="row">
-                                <label for="report_email"><?php esc_html_e('Report Email', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <input type="email" id="report_email" name="sseo_ai_report_email" 
-                                       value="<?php echo esc_attr($reportEmail); ?>" class="regular-text">
-                                <p class="description">
-                                    <?php esc_html_e('Email address to receive SEO reports', 'ai-seo-client'); ?>
-                                </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row">
-                                <label for="report_frequency"><?php esc_html_e('Report Frequency', 'ai-seo-client'); ?></label>
-                            </th>
-                            <td>
-                                <select id="report_frequency" name="sseo_ai_report_frequency">
-                                    <option value="daily" <?php selected($reportFrequency, 'daily'); ?>><?php esc_html_e('Daily', 'ai-seo-client'); ?></option>
-                                    <option value="weekly" <?php selected($reportFrequency, 'weekly'); ?>><?php esc_html_e('Weekly', 'ai-seo-client'); ?></option>
-                                    <option value="monthly" <?php selected($reportFrequency, 'monthly'); ?>><?php esc_html_e('Monthly', 'ai-seo-client'); ?></option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><?php esc_html_e('Email Notifications', 'ai-seo-client'); ?></th>
-                            <td>
-                                <fieldset>
-                                    <label>
-                                        <input type="checkbox" name="sseo_ai_email_notifications[]" value="rank_drop" 
-                                               <?php checked(in_array('rank_drop', $emailNotifications)); ?>>
-                                        <?php esc_html_e('Keyword rank drops', 'ai-seo-client'); ?>
-                                    </label><br>
-                                    
-                                    <label>
-                                        <input type="checkbox" name="sseo_ai_email_notifications[]" value="toxic_links" 
-                                               <?php checked(in_array('toxic_links', $emailNotifications)); ?>>
-                                        <?php esc_html_e('Toxic backlinks detected', 'ai-seo-client'); ?>
-                                    </label><br>
-                                    
-                                    <label>
-                                        <input type="checkbox" name="sseo_ai_email_notifications[]" value="content_decay" 
-                                               <?php checked(in_array('content_decay', $emailNotifications)); ?>>
-                                        <?php esc_html_e('Content decay alerts', 'ai-seo-client'); ?>
-                                    </label>
-                                </fieldset>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <button type="button" class="fyn-btn fyn-btn-outline" onclick="sseoSendTestReport()">
-                        <?php esc_html_e('Send Test Report', 'ai-seo-client'); ?>
-                    </button>
-                    <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                        <?php submit_button(__('Save Settings', 'ai-seo-client'), 'primary', 'submit', false, ['class' => 'fyn-btn fyn-btn-primary']); ?>
-                    </div>
+                            <?php
+                            $frequencyLabels = ['off' => __('Off', 'ai-seo-client'), 'daily' => __('Daily', 'ai-seo-client'), 'weekly' => __('Weekly (Monday)', 'ai-seo-client'), 'monthly' => __('Monthly', 'ai-seo-client')];
+                            $mailStatus = EmailSettings::transportStatus();
+                            ?>
+                            <p><strong><?php esc_html_e('SEO report', 'ai-seo-client'); ?>:</strong> <?php echo esc_html($frequencyLabels[EmailSettings::reportFrequency()]); ?>
+                                <?php if (EmailSettings::reportFrequency() !== 'off') : ?> &rarr; <?php echo esc_html(implode(', ', EmailSettings::reportRecipients())); ?><?php endif; ?></p>
+                            <p style="font-size:13px;"><?php echo esc_html($mailStatus['label']); ?></p>
+                            <a class="fyn-btn fyn-btn-outline" href="<?php echo esc_url(admin_url('admin.php?page=ai-seo-settings#sseo-email-settings')); ?>"><?php esc_html_e('Manage e-mail & reports', 'ai-seo-client'); ?></a>
                         </div>
                         
                         <!-- Google Drive Export -->
@@ -905,19 +852,6 @@ class ExternalIntegrations
             });
         }
         
-        function sseoSendTestReport() {
-            jQuery.post(ajaxurl, {
-                action: 'sseo_ai_send_test_report',
-                nonce: '<?php echo wp_create_nonce('sseo_integrations'); ?>'
-            }, function(response) {
-                if (response.success) {
-                    alert('<?php esc_html_e('Test report sent!', 'ai-seo-client'); ?>');
-                } else {
-                    alert(response.data.message || 'Error sending test report');
-                }
-            });
-        }
-        
         function sseoExportToGDrive() {
             jQuery.post(ajaxurl, {
                 action: 'sseo_ai_export_gdrive',
@@ -1236,22 +1170,13 @@ class ExternalIntegrations
      */
     public function sendDailyReport(): void
     {
-        $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
-        $frequency = get_option('sseo_ai_report_frequency', 'weekly');
-        
-        if ($frequency !== 'daily') {
+        if (EmailSettings::reportFrequency() !== 'daily') {
             return;
         }
-        
+
         $report = $this->generateReport('daily');
-        
-        wp_mail(
-            $reportEmail,
-            sprintf(__('Daily SEO Report - %s', 'ai-seo-client'), get_bloginfo('name')),
-            $report,
-            ['Content-Type: text/html; charset=UTF-8']
-        );
-        
+        $this->mailReport('daily', $report, false);
+
         // Send to Slack if enabled
         $slackNotifications = get_option('sseo_ai_slack_notifications', []);
         if (!is_array($slackNotifications)) { $slackNotifications = []; }
@@ -1270,41 +1195,48 @@ class ExternalIntegrations
      */
     public function sendWeeklyReport(): void
     {
-        $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
-        $frequency = get_option('sseo_ai_report_frequency', 'weekly');
-        
-        if ($frequency !== 'weekly') {
-            return;
+        if (EmailSettings::reportFrequency() === 'weekly') {
+            $this->sendReport('weekly');
         }
-        
-        $report = $this->generateReport('weekly');
-        
-        wp_mail(
-            $reportEmail,
-            sprintf(__('Weekly SEO Report - %s', 'ai-seo-client'), get_bloginfo('name')),
-            $report,
-            ['Content-Type: text/html; charset=UTF-8']
-        );
     }
-    
+
     /**
      * Send monthly report
      */
     public function sendMonthlyReport(): void
     {
-        $reportEmail = get_option('sseo_ai_report_email', get_option('admin_email'));
-        $frequency = get_option('sseo_ai_report_frequency', 'weekly');
-        
-        if ($frequency !== 'monthly') {
-            return;
+        if (EmailSettings::reportFrequency() === 'monthly') {
+            $this->sendReport('monthly');
         }
-        
-        $report = $this->generateReport('monthly');
-        
-        wp_mail(
-            $reportEmail,
-            sprintf(__('Monthly SEO Report - %s', 'ai-seo-client'), get_bloginfo('name')),
-            $report,
+    }
+
+    /**
+     * Build and mail the SEO report for one period. $test sends it regardless of the frequency
+     * setting (Settings → E-mail & reports → "Send test report now").
+     */
+    public function sendReport(string $period, bool $test = false): bool
+    {
+        $period = in_array($period, ['daily', 'weekly', 'monthly'], true) ? $period : 'weekly';
+        return $this->mailReport($period, $this->generateReport($period), $test);
+    }
+
+    private function mailReport(string $period, string $html, bool $test): bool
+    {
+        $subjects = [
+            'daily' => __('Daily SEO Report - %s', 'ai-seo-client'),
+            'weekly' => __('Weekly SEO Report - %s', 'ai-seo-client'),
+            'monthly' => __('Monthly SEO Report - %s', 'ai-seo-client'),
+        ];
+        $subject = sprintf($subjects[$period], wp_specialchars_decode((string)get_bloginfo('name'), ENT_QUOTES));
+        if ($test) {
+            $subject = '[' . __('Test', 'ai-seo-client') . '] ' . $subject;
+        }
+
+        return Mailer::send(
+            $test ? 'test' : 'report',
+            EmailSettings::reportRecipients(),
+            $subject,
+            $html,
             ['Content-Type: text/html; charset=UTF-8']
         );
     }
@@ -1413,7 +1345,8 @@ class ExternalIntegrations
             return $out;
         });
 
-        $html .= '<p style="margin-top: 24px; font-size: 13px; color: #6b7280;">' . esc_html__('Open the full report in the Fyndable dashboard for more details.', 'ai-seo-client') . ' <a href="' . esc_url(admin_url('admin.php?page=ai-seo-report')) . '">' . esc_html__('View report', 'ai-seo-client') . '</a></p>';
+        $html .= '<p style="margin-top: 24px; font-size: 13px; color: #6b7280;">' . esc_html(sprintf(__('Open the full report in the %s dashboard for more details.', 'ai-seo-client'), EmailSettings::brandName())) . ' <a href="' . esc_url(admin_url('admin.php?page=ai-seo-report')) . '">' . esc_html__('View report', 'ai-seo-client') . '</a></p>';
+        $html .= '<p style="font-size: 12px; color: #9ca3af;">' . esc_html__('You receive this e-mail because SEO reports are switched on for this website.', 'ai-seo-client') . ' <a href="' . esc_url(admin_url('admin.php?page=ai-seo-settings#sseo-email-settings')) . '">' . esc_html__('Change or switch off', 'ai-seo-client') . '</a></p>';
         $html .= '</div></body></html>';
 
         return $html;

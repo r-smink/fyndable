@@ -952,7 +952,8 @@ class ContentCalendar
         
         // Email notification
         if ($notifyEmail) {
-            wp_mail(
+            Mailer::send(
+                'calendar',
                 $user->user_email,
                 __('New Content Assignment', 'ai-seo-client'),
                 $message . "\n\n" . get_edit_post_link($postId)
@@ -997,7 +998,8 @@ class ContentCalendar
         
         // Email notification
         if ($notifyEmail) {
-            wp_mail(
+            Mailer::send(
+                'calendar',
                 $approver->user_email,
                 __('Content Approval Required', 'ai-seo-client'),
                 $message . "\n\n" . get_edit_post_link($postId)

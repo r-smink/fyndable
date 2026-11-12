@@ -49,7 +49,11 @@ class GeoScanner
      *                              dedicated model (sseo_ai_saas_geo_website_model).
      * @return array|\WP_Error ['scan_id' => int, 'report' => array]
      */
-    public function scan(string $url, array $keywords, string $language = 'nl', ?callable $onProgress = null, ?int $scanId = null, string $source = 'admin'): array|\WP_Error
+    /**
+     * @param string[] $brandNames optional brand/company names; a platform answer that names the brand
+     *                             (without linking the domain) also counts as a mention.
+     */
+    public function scan(string $url, array $keywords, string $language = 'nl', ?callable $onProgress = null, ?int $scanId = null, string $source = 'admin', array $brandNames = []): array|\WP_Error
     {
         if (function_exists('set_time_limit')) {
             @set_time_limit(600);
@@ -127,7 +131,8 @@ class GeoScanner
 
         $targetHost = $this->normalizeHost((string)(parse_url($url, PHP_URL_HOST) ?: ''));
         $progress(72, __('AI-platformzichtbaarheid controleren…', 'sseo-ai-saas'));
-        $platformVisibility = $this->scanPlatformVisibility($keywords, $keywordResults, $language, $targetHost, $progress);
+        $brandTerms = $this->brandTerms($targetHost, $brandNames, $keywords);
+        $platformVisibility = $this->scanPlatformVisibility($keywords, $keywordResults, $language, $targetHost, $brandTerms, $progress);
         $competitiveBenchmark = $this->buildCompetitiveBenchmark($platformVisibility, $targetHost);
 
         $multiModelEnabled = $source === 'website'
@@ -770,7 +775,7 @@ AI Overview context:
         return $cut;
     }
 
-    private function scanPlatformVisibility(array $keywords, array $keywordResults, string $language, string $targetHost, callable $progress): array
+    private function scanPlatformVisibility(array $keywords, array $keywordResults, string $language, string $targetHost, array $brandTerms, callable $progress): array
     {
         $platforms = [];
         $googleTests = [];
@@ -782,11 +787,8 @@ AI Overview context:
                     $hosts[] = $host;
                 }
             }
-            $googleTests[] = [
-                'keyword' => (string)($result['keyword'] ?? ''),
-                'mentioned' => in_array($targetHost, $hosts, true),
-                'source_hosts' => array_values(array_unique($hosts)),
-            ];
+            $keyword = (string)($result['keyword'] ?? '');
+            $googleTests[] = $this->platformTest($keyword, (string)($result['ai_text'] ?? ''), array_values(array_unique($hosts)), $targetHost, $brandTerms);
         }
         $platforms['google_ai_overviews'] = $this->summarizePlatformTests($googleTests);
 
@@ -828,15 +830,13 @@ AI Overview context:
                 if (is_wp_error($response) || empty($response['tasks'][0]['result'])) {
                     continue;
                 }
-                $text = $this->extractLlmResponseText($response);
-                $hosts = $this->extractHostsFromResponse($response);
-                $mentioned = in_array($targetHost, $hosts, true)
-                    || ($targetHost !== '' && stripos($text, $targetHost) !== false);
-                $tests[] = [
-                    'keyword' => $keyword,
-                    'mentioned' => $mentioned,
-                    'source_hosts' => $hosts,
-                ];
+                $tests[] = $this->platformTest(
+                    $keyword,
+                    $this->extractLlmResponseText($response),
+                    $this->extractHostsFromResponse($response),
+                    $targetHost,
+                    $brandTerms
+                );
             }
             $platforms[$provider] = $this->summarizePlatformTests($tests);
         }
@@ -874,7 +874,7 @@ AI Overview context:
                     $ownMentions++;
                 }
                 foreach ((array)($test['source_hosts'] ?? []) as $host) {
-                    if ($host === $targetHost || $this->isGenericHost($host)) {
+                    if ($this->isTargetHost($host, $targetHost) || $this->isGenericHost($host)) {
                         continue;
                     }
                     $competitors[$host] = ($competitors[$host] ?? 0) + 1;
@@ -951,6 +951,132 @@ AI Overview context:
         return preg_replace('/^www\./i', '', strtolower(rtrim(trim($host), '.'))) ?: '';
     }
 
+    /** The scanned domain itself or one of its subdomains (shop.example.nl counts for example.nl). */
+    private function isTargetHost(string $host, string $targetHost): bool
+    {
+        return $targetHost !== '' && ($host === $targetHost || str_ends_with($host, '.' . $targetHost));
+    }
+
+    /**
+     * One platform test: "cited" = the domain is among the sources, "named" = the answer text
+     * mentions the domain or the brand. Either counts as a mention.
+     */
+    private function platformTest(string $keyword, string $text, array $hosts, string $targetHost, array $brandTerms): array
+    {
+        $cited = (bool)array_filter($hosts, fn(string $host): bool => $this->isTargetHost($host, $targetHost));
+        $match = null;
+        if ($targetHost !== '' && ($pos = stripos($text, $targetHost)) !== false) {
+            $match = ['term' => $targetHost, 'excerpt' => $this->excerptAround($text, $pos, strlen($targetHost))];
+        }
+        $match ??= $this->findBrandMention($text, $brandTerms);
+
+        return [
+            'keyword' => $keyword,
+            'mentioned' => $cited || $match !== null,
+            'cited' => $cited,
+            'named' => $match !== null,
+            'matched_term' => $match['term'] ?? '',
+            'excerpt' => $match['excerpt'] ?? '',
+            'source_hosts' => $hosts,
+        ];
+    }
+
+    /**
+     * Brand terms to look for in AI answers: the domain stem (northgear.nl → "northgear",
+     * bakkerij-jansen.nl → "bakkerij jansen") plus any explicit brand names. Terms that are too short,
+     * generic, or that occur in a tested keyword are dropped: the answer would echo them anyway.
+     *
+     * @return string[] normalized terms (lowercase, accents removed, words separated by one space)
+     */
+    public function brandTerms(string $targetHost, array $brandNames, array $keywords): array
+    {
+        $candidates = [];
+        foreach ($brandNames as $name) {
+            $candidates[] = (string)$name;
+        }
+        $labels = array_values(array_filter(explode('.', $targetHost)));
+        if (count($labels) >= 2) {
+            // Second-level public suffixes such as co.uk / com.au: the brand is the label before them.
+            $twoLevel = in_array($labels[count($labels) - 2], ['co', 'com', 'org', 'net', 'ac', 'gov', 'edu'], true) && count($labels) >= 3;
+            $candidates[] = str_replace('-', ' ', $labels[count($labels) - ($twoLevel ? 3 : 2)]);
+        }
+
+        $generic = ['seo', 'shop', 'webshop', 'online', 'info', 'home', 'site', 'website', 'web', 'store', 'best', 'beste', 'the', 'app', 'blog', 'news', 'nieuws', 'service', 'services', 'company', 'group', 'groep', 'nl', 'com', 'www'];
+        $keywordText = ' ' . implode(' ', array_map(fn($keyword): string => $this->normalizeBrandText((string)$keyword), $keywords)) . ' ';
+        $keywordSquashed = str_replace(' ', '', $keywordText);
+
+        $terms = [];
+        foreach ($candidates as $candidate) {
+            $term = $this->normalizeBrandText($candidate);
+            $squashed = str_replace(' ', '', $term);
+            if (mb_strlen($squashed) < 4 || in_array($term, $generic, true)) {
+                continue;
+            }
+            if (str_contains($keywordText, ' ' . $term . ' ') || str_contains($keywordSquashed, $squashed)) {
+                continue;
+            }
+            $terms[$term] = true;
+        }
+        return array_keys($terms);
+    }
+
+    /**
+     * Find the first brand term in $text. Words are compared after normalization, and 1 to 4
+     * consecutive words are also joined, so "North Gear", "NorthGear" and "northgear.nl" all match "northgear".
+     *
+     * @return array{term: string, excerpt: string}|null
+     */
+    public function findBrandMention(string $text, array $terms): ?array
+    {
+        if ($text === '' || !$terms || !preg_match_all('/[\p{L}\p{N}]+/u', $text, $matches, PREG_OFFSET_CAPTURE)) {
+            return null;
+        }
+        $tokens = $matches[0];
+        $words = array_map(fn(array $token): string => str_replace(' ', '', $this->normalizeBrandText($token[0])), $tokens);
+        $count = count($words);
+
+        foreach ($terms as $term) {
+            $target = str_replace(' ', '', $term);
+            for ($i = 0; $i < $count; $i++) {
+                $joined = '';
+                for ($n = 0; $n < 4 && $i + $n < $count; $n++) {
+                    $joined .= $words[$i + $n];
+                    if ($joined === $target) {
+                        $start = $tokens[$i][1];
+                        $end = $tokens[$i + $n][1] + strlen($tokens[$i + $n][0]);
+                        return ['term' => $term, 'excerpt' => $this->excerptAround($text, $start, $end - $start)];
+                    }
+                    if (strlen($joined) >= strlen($target)) {
+                        break;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private function normalizeBrandText(string $text): string
+    {
+        $text = function_exists('remove_accents') ? remove_accents($text) : $text;
+        $text = mb_strtolower($text);
+        return trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', $text) ?? '');
+    }
+
+    /** ±120 characters around a byte offset, cut on whole characters and words. */
+    private function excerptAround(string $text, int $offset, int $length): string
+    {
+        $start = max(0, $offset - 120);
+        $excerpt = mb_strcut($text, $start, $length + 240, 'UTF-8');
+        $excerpt = trim(preg_replace('/\s+/u', ' ', $excerpt) ?? '');
+        if ($start > 0) {
+            $excerpt = '…' . preg_replace('/^\S*\s/u', '', $excerpt);
+        }
+        if ($offset + $length + 120 < strlen($text)) {
+            $excerpt = preg_replace('/\s\S*$/u', '', $excerpt) . '…';
+        }
+        return $excerpt;
+    }
+
     private function isGenericHost(string $host): bool
     {
         $generic = ['google.com', 'google.nl', 'bing.com', 'youtube.com', 'wikipedia.org', 'linkedin.com', 'facebook.com', 'instagram.com', 'x.com', 'reddit.com'];
@@ -984,7 +1110,7 @@ AI Overview context:
                 if ($host) {
                     $sourceHosts[] = $host;
                 }
-                if ($host && $host === $targetHost) {
+                if ($host && $this->isTargetHost($host, $targetHost)) {
                     $cited = true;
                 }
             }
@@ -993,10 +1119,10 @@ AI Overview context:
             $targetPosition = null;
             foreach ($kr['organic_top'] as $idx => $item) {
                 $host = $this->normalizeHost((string)(parse_url($item['url'], PHP_URL_HOST) ?: ''));
-                if ($host && $host === $targetHost && $targetPosition === null) {
+                if ($host && $this->isTargetHost($host, $targetHost) && $targetPosition === null) {
                     $targetPosition = $idx + 1;
                 }
-                if ($host && $host !== $targetHost && !in_array($host, array_column($competitors, 'host'), true)) {
+                if ($host && !$this->isTargetHost($host, $targetHost) && !in_array($host, array_column($competitors, 'host'), true)) {
                     $competitors[] = [
                         'host'  => $host,
                         'title' => $item['title'],

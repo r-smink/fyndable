@@ -8388,3 +8388,129 @@ msgstr "Tekstbeschrijving — de AI beschrijft elke afbeelding en voegt dat toe 
 
 msgid "Send images to the model — most faithful for protected logos and persons. Requires an OpenRouter image model that accepts reference images (e.g. Gemini or GPT Image); otherwise the image is generated without references."
 msgstr "Afbeeldingen meesturen naar het model — meest getrouw voor beschermde logo's en personen. Vereist een OpenRouter-beeldmodel dat referentieafbeeldingen accepteert (bijv. Gemini of GPT Image); anders wordt de afbeelding zonder referenties gegenereerd."
+
+msgid "No valid recipient address."
+msgstr "Geen geldig ontvangstadres."
+
+msgid "wp_mail() could not send the message. Check the mail settings of this site."
+msgstr "wp_mail() kon het bericht niet versturen. Controleer de mailinstellingen van deze site."
+
+msgid "Mail is sent via %s."
+msgstr "Mail wordt verstuurd via %s."
+
+msgid "The sender address set in that plugin may override the sender address below."
+msgstr "Het afzenderadres in die plugin kan het afzenderadres hieronder overschrijven."
+
+msgid "Mail is sent via a mail plugin of this site (wp_mail is replaced)."
+msgstr "Mail wordt verstuurd via een mailplugin van deze site (wp_mail is vervangen)."
+
+msgid "Mail is sent with a custom SMTP configuration of this site."
+msgstr "Mail wordt verstuurd met een eigen SMTP-configuratie van deze site."
+
+msgid "Mail is sent with the PHP mail() function of the web server."
+msgstr "Mail wordt verstuurd met de PHP mail()-functie van de webserver."
+
+msgid "This often ends up in spam or is not delivered. Install an SMTP plugin (for example WP Mail SMTP or FluentSMTP) and connect it to your own mail server or mail service."
+msgstr "Dit belandt vaak in de spam of komt niet aan. Installeer een SMTP-plugin (bijvoorbeeld WP Mail SMTP of FluentSMTP) en koppel die aan je eigen mailserver of maildienst."
+
+msgid "E-mail & reports"
+msgstr "E-mail & rapporten"
+
+msgid "Choose which e-mails this plugin sends and to whom. Mail is sent with the mail settings of this website."
+msgstr "Kies welke e-mails deze plugin verstuurt en naar wie. De mail gaat via de mailinstellingen van deze website."
+
+msgid "SEO report"
+msgstr "SEO-rapport"
+
+msgid "Weekly (Monday)"
+msgstr "Wekelijks (maandag)"
+
+msgid "Summary of SEO scores, rankings, technical health and action items."
+msgstr "Overzicht van SEO-scores, rankings, technische gezondheid en actiepunten."
+
+msgid "Report recipients"
+msgstr "Ontvangers rapport"
+
+msgid "Separate multiple addresses with a comma. Empty = the administrator address of this site."
+msgstr "Meerdere adressen scheiden met een komma. Leeg = het beheerdersadres van deze site."
+
+msgid "Ranking drops (SERP Monitor, when the monitor is switched on)"
+msgstr "Rankingdalingen (SERP Monitor, als de monitor aan staat)"
+
+msgid "ApexFlow: weekly summary of scheduled posts"
+msgstr "ApexFlow: wekelijks overzicht van ingeplande berichten"
+
+msgid "Content calendar: assignments and review requests"
+msgstr "Contentkalender: toewijzingen en reviewverzoeken"
+
+msgid "Technical errors (e.g. an AI service that does not respond)"
+msgstr "Technische fouten (bijv. een AI-dienst die niet reageert)"
+
+msgid "At most"
+msgstr "Maximaal"
+
+msgid "error e-mails per day (identical errors at most once per hour)"
+msgstr "foutmails per dag (dezelfde fout maximaal één keer per uur)"
+
+msgid "Notifications go to the administrator address of this site; calendar e-mails go to the assigned user."
+msgstr "Meldingen gaan naar het beheerdersadres van deze site; kalendermails gaan naar de toegewezen gebruiker."
+
+msgid "Sender name"
+msgstr "Afzendernaam"
+
+msgid "Sender address"
+msgstr "Afzenderadres"
+
+msgid "Leave empty to use the address of WordPress / your SMTP plugin"
+msgstr "Leeg laten = het adres van WordPress of je SMTP-plugin"
+
+msgid "Only applies to e-mails from this plugin. Use an address on your own domain that your mail server is allowed to send from, otherwise mail may be rejected."
+msgstr "Geldt alleen voor e-mails van deze plugin. Gebruik een adres op je eigen domein waarvandaan je mailserver mag versturen, anders kan de mail geweigerd worden."
+
+msgid "Send test e-mail"
+msgstr "Testmail versturen"
+
+msgid "Send test report now"
+msgstr "Testrapport nu versturen"
+
+msgid "Uses the saved settings and sends to the report recipients. Save your changes first."
+msgstr "Gebruikt de opgeslagen instellingen en verstuurt naar de ontvangers van het rapport. Sla wijzigingen eerst op."
+
+msgid "Sending…"
+msgstr "Versturen…"
+
+msgid "Test e-mail from %s"
+msgstr "Testmail van %s"
+
+msgid "This is a test e-mail from the %1$s plugin on %2$s."
+msgstr "Dit is een testmail van de %1$s-plugin op %2$s."
+
+msgid "If you received this, e-mail from this website arrives correctly."
+msgstr "Komt deze mail aan, dan werkt e-mail vanaf deze website goed."
+
+msgid "Not sent: %s"
+msgstr "Niet verstuurd: %s"
+
+msgid "Sent to %s. Also check the spam folder."
+msgstr "Verstuurd naar %s. Kijk ook in de spammap."
+
+msgid "Once a month"
+msgstr "Eens per maand"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Open the full report in the %s dashboard for more details."
+msgstr "Open het volledige rapport in het %s-dashboard voor meer details."
+
+msgid "You receive this e-mail because SEO reports are switched on for this website."
+msgstr "Je ontvangt deze e-mail omdat SEO-rapporten voor deze website aan staan."
+
+msgid "Change or switch off"
+msgstr "Wijzigen of uitzetten"
+
+msgid "Manage e-mail & reports"
+msgstr "E-mail & rapporten beheren"
+
+msgid "Change or switch off these e-mails: %s"
+msgstr "Deze e-mails wijzigen of uitzetten: %s"

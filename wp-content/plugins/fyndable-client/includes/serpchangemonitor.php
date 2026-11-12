@@ -324,8 +324,9 @@ PROMPT;
             );
         }
         $body .= "\n" . sprintf(__("View details: %s", 'ai-seo-client'), admin_url('admin.php?page=ai-seo-serp-monitor'));
+        $body .= "\n" . sprintf(__('Change or switch off these e-mails: %s', 'ai-seo-client'), admin_url('admin.php?page=ai-seo-settings#sseo-email-settings'));
 
-        wp_mail($to, $subject, $body);
+        Mailer::send('serp', $to, $subject, $body);
     }
 
     // REST handlers

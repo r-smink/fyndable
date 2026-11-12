@@ -744,3 +744,219 @@ body.sseo-geo-modal-open {
         height: 110px;
     }
 }
+
+/* ===== Scan overview: view toggle, bulk bar, cards, pagination ===== */
+.sseo-geo-section-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.sseo-geo-section-head h2 {
+    margin-bottom: 4px;
+}
+
+.sseo-geo-view-toggle {
+    display: inline-flex;
+    gap: 0;
+}
+
+.sseo-geo-view-toggle .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 0;
+}
+
+.sseo-geo-view-toggle .button:first-child {
+    border-radius: 6px 0 0 6px;
+}
+
+.sseo-geo-view-toggle .button:last-child {
+    border-radius: 0 6px 6px 0;
+    margin-left: -1px;
+}
+
+.sseo-geo-view-toggle .button.is-active {
+    background: linear-gradient(135deg, #8f39ac 0%, #379fd3 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.sseo-geo-view-toggle .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.sseo-geo-bulk {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0 0 10px;
+}
+
+.sseo-geo-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-b, #413b52);
+}
+
+.sseo-geo-count {
+    margin-left: auto;
+    color: var(--text-m, #746e82);
+}
+
+.sseo-geo-scans-table .check-column {
+    width: 2.2em;
+}
+
+.sseo-geo-scans-table .sseo-geo-col-score,
+.sseo-geo-scans-table .sseo-geo-col-consent {
+    width: 90px;
+}
+
+.sseo-geo-scans-table .sseo-geo-col-actions {
+    width: 290px;
+}
+
+.sseo-geo-scans-table .sseo-geo-url {
+    word-break: break-all;
+}
+
+.sseo-geo-actions .button,
+.sseo-geo-scan-card-actions .button {
+    margin: 2px 4px 2px 0;
+}
+
+.sseo-geo-admin .button-link-delete.sseo-geo-delete {
+    color: #b32d2e;
+    border-color: #e5b3b4;
+    background: transparent;
+}
+
+.sseo-geo-admin .button-link-delete.sseo-geo-delete:hover {
+    color: #fff;
+    background: #b32d2e;
+    border-color: #b32d2e;
+}
+
+.sseo-geo-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.sseo-geo-scan-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--card, #fff);
+    border: 1px solid var(--card-border, #e2e1ea);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--card-shadow, none);
+}
+
+.sseo-geo-scan-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.sseo-geo-card-check {
+    padding-top: 2px;
+}
+
+.sseo-geo-scan-card-title {
+    flex: 1;
+    min-width: 0;
+}
+
+.sseo-geo-scan-card-title strong {
+    display: block;
+    font-size: 15px;
+    color: var(--text-h, #1a1430);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sseo-geo-scan-card-title span {
+    font-size: 12px;
+    color: var(--text-m, #746e82);
+}
+
+.sseo-geo-scan-card-score {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #8f39ac 0%, #379fd3 100%);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.sseo-geo-scan-card-score.is-empty {
+    background: var(--well, #f7f6fa);
+    color: var(--text-m, #746e82);
+}
+
+.sseo-geo-scan-card-body {
+    flex: 1;
+    margin: 12px 0;
+}
+
+.sseo-geo-scan-card-body .sseo-geo-status {
+    margin-right: 6px;
+}
+
+.sseo-geo-scan-card-keywords {
+    margin: 10px 0 0;
+    color: var(--text-b, #413b52);
+    font-size: 13px;
+}
+
+.sseo-geo-scan-card-lead {
+    margin-top: 8px;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.sseo-geo-scan-card-actions {
+    border-top: 1px solid var(--card-border, #e2e1ea);
+    padding-top: 10px;
+}
+
+.sseo-geo-pagination {
+    margin-top: 12px;
+}
+
+.sseo-geo-pagination .page-numbers {
+    display: inline-block;
+    min-width: 28px;
+    padding: 2px 6px;
+    margin: 0 2px;
+    border: 1px solid var(--card-border, #e2e1ea);
+    border-radius: 6px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.sseo-geo-pagination .page-numbers.current {
+    background: linear-gradient(135deg, #8f39ac 0%, #379fd3 100%);
+    border-color: transparent;
+    color: #fff;
+}
+
+.sseo-geo-pagination .page-numbers.dots {
+    border: 0;
+}

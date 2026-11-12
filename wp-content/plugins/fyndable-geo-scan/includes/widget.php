@@ -281,6 +281,18 @@ class Widget
             return $this->error('scan_failed', $msg, 502);
         }
 
+        // Alleen bij een nieuwe aanvraag (201); een herhaalde submit (200) mailt niet opnieuw.
+        if ($code === 201) {
+            Notifier::newSubmission([
+                'url'      => $url,
+                'keywords' => $keywords,
+                'email'    => $email,
+                'name'     => $name,
+                'company'  => $company,
+                'scan_id'  => (int)$data['scan_id'],
+            ]);
+        }
+
         return new \WP_REST_Response([
             'success'    => true,
             'scan_id'    => (int)$data['scan_id'],
