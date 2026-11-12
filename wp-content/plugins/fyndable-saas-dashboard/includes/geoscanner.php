@@ -801,7 +801,7 @@ AI Overview context:
 
         $models = [
             'chatgpt' => 'gpt-4.1-mini',
-            'gemini' => 'gemini-2.0-flash',
+            'gemini' => 'gemini-2.5-flash',
             'perplexity' => 'sonar',
         ];
         $testKeywords = array_slice($keywords, 0, 3);
@@ -813,17 +813,24 @@ AI Overview context:
                 $prompt = $language === 'en'
                     ? sprintf('Give a concise, factual answer to this search query and cite the most useful online sources: %s', $keyword)
                     : sprintf('Geef een beknopt, feitelijk antwoord op deze zoekopdracht en citeer de nuttigste online bronnen: %s', $keyword);
-                $jobs[$provider . '|' . $index] = [
-                    'provider' => $provider,
-                    'params' => [
-                        'user_prompt' => mb_substr($prompt, 0, 500),
-                        'model_name' => $model,
-                        'max_output_tokens' => 700,
-                        'temperature' => 0.2,
-                        'web_search' => true,
-                        'web_search_country_iso_code' => $language === 'nl' ? 'NL' : 'US',
-                    ],
+                // Only fields each platform supports (DataForSEO docs): Gemini has no country field,
+                // Perplexity Sonar searches the web by default. 1024 tokens = the minimum for
+                // reasoning models (Gemini Pro reasons automatically; fewer tokens gave an empty answer).
+                $params = [
+                    'user_prompt' => mb_substr($prompt, 0, 500),
+                    'model_name' => $model,
+                    'max_output_tokens' => 1024,
+                    'temperature' => 0.2,
                 ];
+                $country = $language === 'nl' ? 'NL' : 'US';
+                if ($provider === 'chatgpt') {
+                    $params += ['web_search' => true, 'web_search_country_iso_code' => $country];
+                } elseif ($provider === 'gemini') {
+                    $params['web_search'] = true;
+                } elseif ($provider === 'perplexity') {
+                    $params['web_search_country_iso_code'] = $country;
+                }
+                $jobs[$provider . '|' . $index] = ['provider' => $provider, 'params' => $params];
             }
         }
         $progress(74, sprintf(__('AI-platformtests: %d vragen aan ChatGPT, Gemini en Perplexity (kan tot 2 minuten duren)…', 'sseo-ai-saas'), count($jobs)));
@@ -838,9 +845,16 @@ AI Overview context:
                     $errors[] = ['keyword' => $keyword, 'message' => $response->get_error_message()];
                     continue;
                 }
+                $answer = $this->extractLlmResponseText($response);
+                if (trim($answer) === '') {
+                    // An empty answer is not "not mentioned": count it as a failed test.
+                    $modelUsed = (string)($response['tasks'][0]['result'][0]['model_name'] ?? $response['tasks'][0]['data']['model_name'] ?? '');
+                    $errors[] = ['keyword' => $keyword, 'message' => trim(sprintf(__('Leeg antwoord van het model %s', 'sseo-ai-saas'), $modelUsed))];
+                    continue;
+                }
                 $tests[] = $this->platformTest(
                     $keyword,
-                    $this->extractLlmResponseText($response),
+                    $answer,
                     $this->extractHostsFromResponse($response),
                     $targetHost,
                     $brandTerms

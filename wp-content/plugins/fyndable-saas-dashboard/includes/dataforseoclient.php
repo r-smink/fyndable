@@ -385,6 +385,13 @@ class DataForSeoClient
             $params['model_name'] = $params['model'];
         }
         unset($params['prompt'], $params['model'], $params['location_code'], $params['language_code']);
+        // Fields a platform does not support (DataForSEO docs): Gemini has no web search location,
+        // Perplexity Sonar always searches the web and has no web_search switch.
+        if ($provider === 'gemini') {
+            unset($params['web_search_country_iso_code'], $params['web_search_city']);
+        } elseif ($provider === 'perplexity') {
+            unset($params['web_search'], $params['force_web_search'], $params['web_search_city']);
+        }
         $params['user_prompt'] = mb_substr(trim((string) ($params['user_prompt'] ?? '')), 0, 500);
         if ($params['user_prompt'] === '') {
             return new \WP_Error('missing_params', __('user_prompt is required', 'sseo-ai-saas'));
@@ -407,12 +414,21 @@ class DataForSeoClient
         }
         $task = $body['tasks'][0] ?? null;
         if ($httpStatus !== 200 || !is_array($task)) {
-            $message = $body['status_message'] ?? sprintf(__('DataForSEO request failed (HTTP %d)', 'sseo-ai-saas'), $httpStatus);
-            return new \WP_Error('dataforseo_error', (string) $message);
+            $message = (string) ($body['status_message'] ?? sprintf(__('DataForSEO request failed (HTTP %d)', 'sseo-ai-saas'), $httpStatus));
+            if ($httpStatus === 402 || in_array((int) ($body['status_code'] ?? 0), [40200, 40210], true)) {
+                $message .= ' — ' . __('the DataForSEO account balance is too low; top it up at app.dataforseo.com', 'sseo-ai-saas');
+            }
+            return new \WP_Error('dataforseo_error', $message);
         }
         $taskStatus = (int) ($task['status_code'] ?? 20000);
-        if ($taskStatus !== 20000 || empty($task['result'])) {
+        if ($taskStatus === 20000 && empty($task['result'])) {
+            return new \WP_Error('dataforseo_empty_result', sprintf(__('DataForSEO returned status Ok but no answer (model %s)', 'sseo-ai-saas'), (string) ($task['data']['model_name'] ?? '?')), ['status_code' => $taskStatus]);
+        }
+        if ($taskStatus !== 20000) {
             $message = (string) ($task['status_message'] ?? __('DataForSEO returned no result', 'sseo-ai-saas'));
+            if (in_array($taskStatus, [40200, 40210], true)) {
+                $message .= ' — ' . __('the DataForSEO account balance is too low; top it up at app.dataforseo.com', 'sseo-ai-saas');
+            }
             return new \WP_Error('dataforseo_task_error', $message . ' (' . $taskStatus . ')', ['status_code' => $taskStatus]);
         }
         return $body;
@@ -441,6 +457,9 @@ class DataForSeoClient
         }
 
         $candidates = array_values(array_filter($models, fn ($m) => empty($m['reasoning']) && (!$webSearch || !empty($m['web_search_supported']))));
+        // Prefer light models: "pro" models may reason by default (Gemini Pro), which needs a larger
+        // token budget and costs more.
+        usort($candidates, static fn ($a, $b) => (int) str_contains((string) $a['model_name'], 'pro') <=> (int) str_contains((string) $b['model_name'], 'pro'));
         $pick = $candidates[0]['model_name'] ?? ($names[0] ?? '');
 
         return $pick !== '' ? (string) $pick : new \WP_Error('no_llm_model', __('No DataForSEO model available for this provider', 'sseo-ai-saas'));
