@@ -70,7 +70,7 @@
     async function confirmPlanFromRedirect() {
         const planHandle = new URLSearchParams(location.search).get('plan_handle');
         if (!planHandle) return;
-        sessionStorage.removeItem('fyn-pricing-redirected');
+        try { sessionStorage.removeItem('fyn-pricing-redirected'); } catch (e) { /* storage blocked */ }
         const data = await Fyn.post('/billing/confirm', { plan_handle: planHandle });
         if (!data.error && data.plan_confirmed) {
             Fyn.toast(t('plan_confirmed'));

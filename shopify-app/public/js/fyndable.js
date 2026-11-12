@@ -432,9 +432,15 @@
 
             // No plan and no trial left: send the merchant to the Shopify
             // plan page once per session (App Store requirement for paid apps).
-            if (b.required && !sessionStorage.getItem('fyn-pricing-redirected')) {
-                sessionStorage.setItem('fyn-pricing-redirected', '1');
-                Fyn.openPricing(b.pricing_url);
+            // sessionStorage only dedupes the redirect; it can throw when the
+            // browser blocks storage in the admin iframe, so never rely on it.
+            if (b.required) {
+                let redirected = false;
+                try {
+                    redirected = !!sessionStorage.getItem('fyn-pricing-redirected');
+                    sessionStorage.setItem('fyn-pricing-redirected', '1');
+                } catch (e) { /* storage blocked: redirect anyway */ }
+                if (!redirected) Fyn.openPricing(b.pricing_url);
             }
         },
 
