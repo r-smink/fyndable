@@ -251,6 +251,9 @@ class GeoScanner
             }
         }
         foreach ($platformVisibility as $platform => $visibility) {
+            if (($visibility['status'] ?? '') === 'not_tested') {
+                continue; // not part of this scan: must not read as "not visible"
+            }
             $context[] = sprintf(
                 '- %s: %s (%d/%d)',
                 $platform,
@@ -791,6 +794,14 @@ AI Overview context:
             $googleTests[] = $this->platformTest($keyword, (string)($result['ai_text'] ?? ''), array_values(array_unique($hosts)), $targetHost, $brandTerms);
         }
         $platforms['google_ai_overviews'] = $this->summarizePlatformTests($googleTests);
+
+        // Switched off in SaaS Settings ("GEO: AI-platformtests"): no DataForSEO LLM calls, shown as "not tested".
+        if (!$this->settings->isGeoPlatformTestsEnabled()) {
+            foreach (['chatgpt', 'gemini', 'perplexity'] as $provider) {
+                $platforms[$provider] = ['status' => 'not_tested', 'visibility' => null, 'mentions' => 0, 'tests' => 0, 'results' => []];
+            }
+            return $platforms;
+        }
 
         if (!$this->dataForSeoClient->isConfigured()) {
             foreach (['chatgpt', 'gemini', 'perplexity'] as $provider) {

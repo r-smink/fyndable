@@ -22,15 +22,14 @@ class AiOverviewExtractor
     /**
      * Get AI Overview data for a single keyword.
      *
-     * When the DataForSEO AI Overview toggle is enabled and the client is
-     * configured, DataForSEO is tried first. SerpApi remains as fallback.
+     * Follows the "SERP Provider" setting: DataForSEO first when that is the chosen provider (SerpApi
+     * as fallback), otherwise SerpApi only.
      *
      * @return array|\WP_Error Normalized result with has_ai_overview, ai_text, ai_sources, organic_top.
      */
     public function getForKeyword(string $keyword, string $language = 'nl'): array|\WP_Error
     {
-        // Try DataForSEO first when enabled
-        if ($this->settings->isDataForSeoAiOverviewEnabled() && $this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
+        if ($this->settings->useDataForSeoForAiOverview() && $this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
             $dfsResult = $this->getForKeywordViaDataForSeo($keyword, $language);
             if (!is_wp_error($dfsResult)) {
                 $dfsResult['provider'] = 'dataforseo';

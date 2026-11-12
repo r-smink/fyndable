@@ -46,7 +46,9 @@ class GeoScanReport
                     $platform = (array)($platforms[$key] ?? []);
                     $rows = (array)($platform['results'] ?? []);
                     $errors = (array)($platform['errors'] ?? []);
-                    if (!$rows && !$errors) : ?>
+                    if (($platform['status'] ?? '') === 'not_tested') : ?>
+                    <tr><td><?php echo esc_html($label); ?></td><td>—</td><td><span class="sseo-geo-status"><?php esc_html_e('Niet getest', 'sseo-ai-saas'); ?></span></td><td><?php esc_html_e('AI-platformtests staan uit (SaaS-instellingen → GEO: AI-platformtests).', 'sseo-ai-saas'); ?></td></tr>
+                    <?php elseif (!$rows && !$errors) : ?>
                     <tr><td><?php echo esc_html($label); ?></td><td>—</td><td><span class="sseo-geo-status no"><?php esc_html_e('Geen data', 'sseo-ai-saas'); ?></span></td><td><?php esc_html_e('Geen geslaagde test (oudere scan of platform niet getest).', 'sseo-ai-saas'); ?></td></tr>
                     <?php endif;
                     foreach ($rows as $test) :

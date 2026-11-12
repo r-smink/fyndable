@@ -94,9 +94,10 @@ class SaaSSettings
         // DataForSEO central API key (used by SERP, AI Optimization, Keywords Data, Backlinks).
         // Falls back to the SERP-specific DataForSEO key for backward compatibility.
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_dataforseo_api_key');
-        // Toggle: use DataForSEO for AI Overview data alongside SerpApi in AiOverviewExtractor.
-        register_setting('ai_seo_saas_settings', 'ai_seo_saas_dataforseo_ai_overview_enabled', [
-            'default' => false,
+        // GEO scan: ChatGPT/Gemini/Perplexity tests (DataForSEO LLM Responses) on/off.
+        // (The AI Overview provider follows "SERP Provider"; the old ai_seo_saas_dataforseo_ai_overview_enabled toggle is gone.)
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_platform_tests', [
+            'default' => true,
             'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1),
         ]);
 
@@ -335,11 +336,20 @@ class SaaSSettings
     }
 
     /**
-     * Whether DataForSEO should be used for AI Overview data alongside SerpApi.
+     * GEO scan Google AI Overview source: follows "SERP Provider". DataForSEO only when that is the
+     * chosen provider; SerpApi otherwise (SE Ranking has no AI Overview data).
      */
-    public function isDataForSeoAiOverviewEnabled(): bool
+    public function useDataForSeoForAiOverview(): bool
     {
-        return (bool) get_option('ai_seo_saas_dataforseo_ai_overview_enabled', false);
+        return $this->getSerpApiProvider() === 'dataforseo';
+    }
+
+    /**
+     * GEO scan ChatGPT/Gemini/Perplexity tests via DataForSEO LLM Responses (costs DataForSEO balance).
+     */
+    public function isGeoPlatformTestsEnabled(): bool
+    {
+        return (bool) get_option('sseo_ai_saas_geo_platform_tests', true);
     }
     
     /**
@@ -802,6 +812,16 @@ class SaaSSettings
                                     <option value="serpapi" <?php selected($this->getSerpApiProvider(), 'serpapi'); ?>>SerpApi</option>
                                     <option value="seranking" <?php selected($this->getSerpApiProvider(), 'seranking'); ?>>SE Ranking</option>
                                 </select>
+                                <p class="description"><?php esc_html_e('Ook gebruikt voor de Google AI Overview in de GEO-scan. DataForSEO valt terug op SerpApi; bij SE Ranking gaat de AI Overview via SerpApi.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><label for="sseo_geo_platform_tests"><?php esc_html_e('GEO: AI-platformtests', 'sseo-ai-saas'); ?></label></th>
+                            <td>
+                                <input type="hidden" name="sseo_ai_saas_geo_platform_tests" value="0">
+                                <label><input type="checkbox" name="sseo_ai_saas_geo_platform_tests" id="sseo_geo_platform_tests" value="1" <?php checked($this->isGeoPlatformTestsEnabled()); ?>>
+                                    <?php esc_html_e('ChatGPT, Gemini en Perplexity meetesten (via DataForSEO)', 'sseo-ai-saas'); ?></label>
+                                <p class="description"><?php esc_html_e('Per scan 9 live AI-vragen (3 platforms × 3 zoekwoorden), betaald uit het DataForSEO-tegoed. Uit: de scan test alleen Google AI Overview; de andere platforms staan dan als "Niet getest" in het rapport.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         <tr>
@@ -872,13 +892,6 @@ class SaaSSettings
                                         <br><strong><?php esc_html_e('Note: using the legacy SERP DataForSEO key as fallback.', 'sseo-ai-saas'); ?></strong>
                                     <?php endif; ?>
                                 </p>
-                            </td>
-                        </tr>
-                        <tr>
-                            <th scope="row"><label for="dataforseo_ai_overview_enabled"><?php esc_html_e('DataForSEO for AI Overview', 'sseo-ai-saas'); ?></label></th>
-                            <td>
-                                <input type="checkbox" name="ai_seo_saas_dataforseo_ai_overview_enabled" id="dataforseo_ai_overview_enabled" value="1" <?php checked(get_option('ai_seo_saas_dataforseo_ai_overview_enabled', false)); ?>>
-                                <p class="description"><?php esc_html_e('Use DataForSEO AI Optimization API for AI Overview data in the GEO Scanner, alongside SerpApi. SerpApi remains as fallback.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                     </table>
