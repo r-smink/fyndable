@@ -19,6 +19,76 @@ class GeoScanReport
     /**
      * Render the report for a given scan id.
      */
+    /**
+     * Per AI platform: each tested keyword with the outcome (cited / named / not mentioned), the quote
+     * in which the brand was found, and why a test failed. Admin-only view; the prospect PDF does not
+     * show this detail.
+     */
+    private function renderPlatformTests(array $platforms): void
+    {
+        if (!$platforms) {
+            return;
+        }
+        $labels = ['chatgpt' => 'ChatGPT', 'perplexity' => 'Perplexity', 'gemini' => 'Gemini', 'google_ai_overviews' => 'Google AI Overviews'];
+        ?>
+        <div class="sseo-geo-report-card sseo-geo-platform-tests">
+            <h2><?php esc_html_e('AI-platformtests', 'sseo-ai-saas'); ?></h2>
+            <p class="sseo-geo-keywords-legend"><?php esc_html_e('Geciteerd = je domein staat bij de bronnen. Genoemd = je merk- of domeinnaam staat in het antwoord. Beide tellen als vermelding.', 'sseo-ai-saas'); ?></p>
+            <table class="wp-list-table widefat striped">
+                <thead><tr>
+                    <th style="width:18%"><?php esc_html_e('Platform', 'sseo-ai-saas'); ?></th>
+                    <th style="width:24%"><?php esc_html_e('Zoekwoord', 'sseo-ai-saas'); ?></th>
+                    <th style="width:16%"><?php esc_html_e('Uitkomst', 'sseo-ai-saas'); ?></th>
+                    <th><?php esc_html_e('Fragment / reden', 'sseo-ai-saas'); ?></th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($labels as $key => $label) :
+                    $platform = (array)($platforms[$key] ?? []);
+                    $rows = (array)($platform['results'] ?? []);
+                    $errors = (array)($platform['errors'] ?? []);
+                    if (!$rows && !$errors) : ?>
+                    <tr><td><?php echo esc_html($label); ?></td><td>—</td><td><span class="sseo-geo-status no"><?php esc_html_e('Geen data', 'sseo-ai-saas'); ?></span></td><td><?php esc_html_e('Geen geslaagde test (oudere scan of platform niet getest).', 'sseo-ai-saas'); ?></td></tr>
+                    <?php endif;
+                    foreach ($rows as $test) :
+                        $test = (array)$test;
+                        if (!empty($test['cited']) && !empty($test['named'])) {
+                            $outcome = __('Geciteerd + genoemd', 'sseo-ai-saas');
+                        } elseif (!empty($test['cited'])) {
+                            $outcome = __('Geciteerd', 'sseo-ai-saas');
+                        } elseif (!empty($test['named']) || !empty($test['mentioned'])) {
+                            $outcome = __('Genoemd', 'sseo-ai-saas');
+                        } else {
+                            $outcome = __('Niet genoemd', 'sseo-ai-saas');
+                        } ?>
+                    <tr>
+                        <td><?php echo esc_html($label); ?></td>
+                        <td><?php echo esc_html((string)($test['keyword'] ?? '')); ?></td>
+                        <td><span class="sseo-geo-status <?php echo !empty($test['mentioned']) ? 'yes' : 'no'; ?>"><?php echo esc_html($outcome); ?></span></td>
+                        <td><?php
+                            if (!empty($test['excerpt'])) {
+                                echo '<em>' . esc_html((string)$test['excerpt']) . '</em>';
+                            } elseif (empty($test['mentioned']) && !empty($test['source_hosts'])) {
+                                echo esc_html(__('Bronnen:', 'sseo-ai-saas') . ' ' . implode(', ', array_slice((array)$test['source_hosts'], 0, 6)));
+                            } else {
+                                echo '—';
+                            } ?></td>
+                    </tr>
+                    <?php endforeach;
+                    foreach ($errors as $error) : $error = (array)$error; ?>
+                    <tr>
+                        <td><?php echo esc_html($label); ?></td>
+                        <td><?php echo esc_html((string)($error['keyword'] ?? '')); ?></td>
+                        <td><span class="sseo-geo-status no"><?php esc_html_e('Test mislukt', 'sseo-ai-saas'); ?></span></td>
+                        <td><?php echo esc_html((string)($error['message'] ?? '')); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
     public function render(int $scanId): void
     {
         $scan = $this->repository->getById($scanId);
@@ -77,6 +147,8 @@ class GeoScanReport
                     <?php endif; ?>
                 </p>
             </div>
+
+            <?php $this->renderPlatformTests((array)($data['platform_visibility'] ?? [])); ?>
 
             <div class="sseo-geo-report-grid sseo-geo-report-grid-2">
                 <div class="sseo-geo-report-card sseo-geo-score-card">

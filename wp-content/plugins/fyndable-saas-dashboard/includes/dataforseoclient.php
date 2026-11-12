@@ -22,6 +22,10 @@ class DataForSeoClient
     private const CIRCUIT_BREAKER_FAILURES = 3;
     private const CIRCUIT_BREAKER_WINDOW = 900; // 15 minutes
     private const MAX_RETRIES = 3;
+    // LLM Responses live tasks may take up to 120 s (DataForSEO docs). A shorter client timeout aborted
+    // them, the retries were billed again and three timeouts opened the circuit breaker for every
+    // following LLM test, so GEO scans reported "insufficient data" for all platforms.
+    private const LLM_TIMEOUT = 130;
 
     // Approximate external cost per request used for cost tracking (converted to EUR for display).
     public const PRICING = [
@@ -70,13 +74,14 @@ class DataForSeoClient
      * @param string $countryCode  ISO country code for device/country params
      * @return array|\WP_Error     Normalized items array or WP_Error
      */
-    public function serpOrganicLiveAdvanced(string $keyword, int $locationCode, string $languageCode, string $countryCode = ''): array|\WP_Error
+    public function serpOrganicLiveAdvanced(string $keyword, int $locationCode, string $languageCode, string $countryCode = '', array $extraTask = []): array|\WP_Error
     {
-        $task = [
+        // $extraTask: optional task fields, e.g. ['load_async_ai_overview' => true] for the AI Overview.
+        $task = array_merge([
             'keyword'       => $keyword,
             'location_code' => $locationCode,
             'language_code' => $languageCode,
-        ];
+        ], $extraTask);
         if (!empty($countryCode)) {
             $task['device'] = 'desktop';
         }
@@ -279,6 +284,88 @@ class DataForSeoClient
      */
     public function llmResponseLive(string $provider, array $params): array|\WP_Error
     {
+        $prepared = $this->prepareLlmRequest($provider, $params);
+        if (is_wp_error($prepared)) {
+            return $prepared;
+        }
+
+        return $this->request($prepared['path'], [$prepared['params']], 'llm_response');
+    }
+
+    /**
+     * Run several LLM Responses live tasks at the same time (DataForSEO allows 30 concurrent live
+     * tasks per platform). Each task may take up to 120 s; run sequentially, a GEO scan with
+     * 3 platforms × 3 keywords would exceed PHP's time limit.
+     *
+     * No retries and no circuit breaker here: a timed-out task is usually still billed, and one slow
+     * platform must not block the others.
+     *
+     * @param array<string|int, array{provider: string, params: array}> $jobs
+     * @return array<string|int, array|\WP_Error> same keys as $jobs: the decoded body, or the error
+     */
+    public function llmResponsesLiveBatch(array $jobs): array
+    {
+        $results = [];
+        $apiKey = $this->getApiKey();
+        if (empty($apiKey)) {
+            $error = new \WP_Error('dataforseo_not_configured', __('DataForSEO API key is not configured', 'sseo-ai-saas'));
+            return array_map(static fn() => $error, $jobs);
+        }
+
+        $requests = [];
+        foreach ($jobs as $key => $job) {
+            $prepared = $this->prepareLlmRequest((string) ($job['provider'] ?? ''), (array) ($job['params'] ?? []));
+            if (is_wp_error($prepared)) {
+                $results[$key] = $prepared;
+                continue;
+            }
+            $requests[$key] = [
+                'url' => self::API_BASE . $prepared['path'],
+                'type' => 'POST',
+                'headers' => ['Authorization' => 'Basic ' . $this->authHeader($apiKey), 'Content-Type' => 'application/json'],
+                'data' => (string) wp_json_encode([$prepared['params']]),
+            ];
+        }
+
+        $requestsClass = class_exists('\WpOrg\Requests\Requests') ? '\WpOrg\Requests\Requests' : '\Requests';
+        $responses = [];
+        if ($requests) {
+            $options = ['timeout' => self::LLM_TIMEOUT, 'connect_timeout' => 15];
+            if (defined('ABSPATH') && defined('WPINC') && is_readable(ABSPATH . WPINC . '/certificates/ca-bundle.crt')) {
+                $options['verify'] = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
+            }
+            try {
+                $responses = $requestsClass::request_multiple($requests, $options);
+            } catch (\Throwable $e) {
+                $responses = array_map(static fn() => $e, $requests);
+            }
+        }
+
+        foreach ($requests as $key => $request) {
+            $response = $responses[$key] ?? null;
+            if ($response instanceof \Throwable || !is_object($response) || !isset($response->status_code)) {
+                $message = $response instanceof \Throwable ? $response->getMessage() : __('No response from DataForSEO', 'sseo-ai-saas');
+                $results[$key] = new \WP_Error('dataforseo_error', $message);
+                continue;
+            }
+            $results[$key] = $this->interpretLlmBody((int) $response->status_code, json_decode((string) $response->body, true));
+        }
+
+        // Keep the caller's order.
+        $ordered = [];
+        foreach (array_keys($jobs) as $key) {
+            $ordered[$key] = $results[$key];
+        }
+        return $ordered;
+    }
+
+    /**
+     * Normalize LLM Responses parameters and resolve the model.
+     *
+     * @return array{path: string, params: array}|\WP_Error
+     */
+    private function prepareLlmRequest(string $provider, array $params): array|\WP_Error
+    {
         $paths = [
             'chatgpt'    => 'chat_gpt',
             'claude'     => 'claude',
@@ -309,7 +396,26 @@ class DataForSeoClient
         }
         $params['model_name'] = $model;
 
-        return $this->request('/ai_optimization/' . $paths[$provider] . '/llm_responses/live', [$params], 'llm_response');
+        return ['path' => '/ai_optimization/' . $paths[$provider] . '/llm_responses/live', 'params' => $params];
+    }
+
+    /** A DataForSEO LLM response body, or a WP_Error with DataForSEO's own message. */
+    private function interpretLlmBody(int $httpStatus, $body): array|\WP_Error
+    {
+        if (!is_array($body)) {
+            return new \WP_Error('dataforseo_error', sprintf(__('DataForSEO request failed (HTTP %d)', 'sseo-ai-saas'), $httpStatus));
+        }
+        $task = $body['tasks'][0] ?? null;
+        if ($httpStatus !== 200 || !is_array($task)) {
+            $message = $body['status_message'] ?? sprintf(__('DataForSEO request failed (HTTP %d)', 'sseo-ai-saas'), $httpStatus);
+            return new \WP_Error('dataforseo_error', (string) $message);
+        }
+        $taskStatus = (int) ($task['status_code'] ?? 20000);
+        if ($taskStatus !== 20000 || empty($task['result'])) {
+            $message = (string) ($task['status_message'] ?? __('DataForSEO returned no result', 'sseo-ai-saas'));
+            return new \WP_Error('dataforseo_task_error', $message . ' (' . $taskStatus . ')', ['status_code' => $taskStatus]);
+        }
+        return $body;
     }
 
     /**
@@ -494,23 +600,28 @@ class DataForSeoClient
             return new \WP_Error('dataforseo_not_configured', __('DataForSEO API key is not configured', 'sseo-ai-saas'));
         }
 
+        // LLM Responses: long-running and billed per task, so one attempt with a long timeout and no
+        // circuit breaker (a slow answer is not an outage). Everything else keeps retries + breaker.
+        $isLlm = $type === 'llm_response';
+
         // Circuit breaker
-        if ($this->isCircuitOpen($type)) {
+        if (!$isLlm && $this->isCircuitOpen($type)) {
             return new \WP_Error('circuit_open', __('DataForSEO is temporarily skipped due to recent failures', 'sseo-ai-saas'));
         }
 
         $url = self::API_BASE . $path;
         $authHeader = $this->authHeader($apiKey);
+        $maxAttempts = $isLlm ? 1 : self::MAX_RETRIES;
 
         $lastError = null;
-        for ($attempt = 1; $attempt <= self::MAX_RETRIES; $attempt++) {
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             $response = wp_remote_post($url, [
                 'headers' => [
                     'Authorization' => 'Basic ' . $authHeader,
                     'Content-Type'  => 'application/json',
                 ],
                 'body'    => json_encode($postBody),
-                'timeout' => 60,
+                'timeout' => $isLlm ? self::LLM_TIMEOUT : 60,
             ]);
 
             if (is_wp_error($response)) {
@@ -541,9 +652,11 @@ class DataForSeoClient
                 $lastError = new \WP_Error('dataforseo_error', is_string($message) ? $message : json_encode($message));
             }
 
-            $this->recordFailure($type);
+            if (!$isLlm) {
+                $this->recordFailure($type);
+            }
 
-            if ($attempt < self::MAX_RETRIES) {
+            if ($attempt < $maxAttempts) {
                 usleep(min(4000000, 1000000 * (2 ** ($attempt - 1))));
             }
         }

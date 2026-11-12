@@ -56,7 +56,7 @@ class GeoScanner
     public function scan(string $url, array $keywords, string $language = 'nl', ?callable $onProgress = null, ?int $scanId = null, string $source = 'admin', array $brandNames = []): array|\WP_Error
     {
         if (function_exists('set_time_limit')) {
-            @set_time_limit(600);
+            @set_time_limit(900);
         }
 
         $progress = function (int $percent, string $label) use ($onProgress, $scanId): void {
@@ -805,29 +805,37 @@ AI Overview context:
             'perplexity' => 'sonar',
         ];
         $testKeywords = array_slice($keywords, 0, 3);
-        $total = max(1, count($models) * count($testKeywords));
-        $completed = 0;
 
+        // All platform × keyword tests run in parallel: each live task can take up to 120 s.
+        $jobs = [];
         foreach ($models as $provider => $model) {
-            $tests = [];
-            foreach ($testKeywords as $keyword) {
-                $completed++;
-                $progress(
-                    72 + (int)round(($completed / $total) * 12),
-                    sprintf(__('AI-platformtest: %s (%d/%d)', 'sseo-ai-saas'), ucfirst($provider), $completed, $total)
-                );
+            foreach ($testKeywords as $index => $keyword) {
                 $prompt = $language === 'en'
                     ? sprintf('Give a concise, factual answer to this search query and cite the most useful online sources: %s', $keyword)
                     : sprintf('Geef een beknopt, feitelijk antwoord op deze zoekopdracht en citeer de nuttigste online bronnen: %s', $keyword);
-                $response = $this->dataForSeoClient->llmResponseLive($provider, [
-                    'user_prompt' => mb_substr($prompt, 0, 500),
-                    'model_name' => $model,
-                    'max_output_tokens' => 700,
-                    'temperature' => 0.2,
-                    'web_search' => true,
-                    'web_search_country_iso_code' => $language === 'nl' ? 'NL' : 'US',
-                ]);
-                if (is_wp_error($response) || empty($response['tasks'][0]['result'])) {
+                $jobs[$provider . '|' . $index] = [
+                    'provider' => $provider,
+                    'params' => [
+                        'user_prompt' => mb_substr($prompt, 0, 500),
+                        'model_name' => $model,
+                        'max_output_tokens' => 700,
+                        'temperature' => 0.2,
+                        'web_search' => true,
+                        'web_search_country_iso_code' => $language === 'nl' ? 'NL' : 'US',
+                    ],
+                ];
+            }
+        }
+        $progress(74, sprintf(__('AI-platformtests: %d vragen aan ChatGPT, Gemini en Perplexity (kan tot 2 minuten duren)…', 'sseo-ai-saas'), count($jobs)));
+        $responses = $this->dataForSeoClient->llmResponsesLiveBatch($jobs);
+
+        foreach ($models as $provider => $model) {
+            $tests = [];
+            $errors = [];
+            foreach ($testKeywords as $index => $keyword) {
+                $response = $responses[$provider . '|' . $index] ?? new \WP_Error('missing', 'No response');
+                if (is_wp_error($response)) {
+                    $errors[] = ['keyword' => $keyword, 'message' => $response->get_error_message()];
                     continue;
                 }
                 $tests[] = $this->platformTest(
@@ -839,7 +847,13 @@ AI Overview context:
                 );
             }
             $platforms[$provider] = $this->summarizePlatformTests($tests);
+            if ($errors) {
+                // Kept for diagnosis (admin/debug only; the prospect PDF never shows API errors).
+                $platforms[$provider]['errors'] = $errors;
+                error_log(sprintf('[Fyndable GEO] %s: %d/%d platform tests failed: %s', $provider, count($errors), count($testKeywords), $errors[0]['message']));
+            }
         }
+        $progress(84, __('AI-platformtests afgerond', 'sseo-ai-saas'));
 
         return $platforms;
     }
@@ -1128,6 +1142,13 @@ AI Overview context:
                         'title' => $item['title'],
                         'url'   => $item['url'],
                     ];
+                }
+            }
+
+            // Also "mentioned" when the AI Overview names the brand without linking (same check as the platform test).
+            foreach ((array)($platformVisibility['google_ai_overviews']['results'] ?? []) as $googleTest) {
+                if (($googleTest['keyword'] ?? null) === $kr['keyword'] && !empty($googleTest['mentioned'])) {
+                    $cited = true;
                 }
             }
 

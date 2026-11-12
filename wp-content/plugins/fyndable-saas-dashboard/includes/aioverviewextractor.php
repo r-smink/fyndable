@@ -76,6 +76,15 @@ class AiOverviewExtractor
             $body = json_decode(wp_remote_retrieve_body($response), true);
 
             if ($statusCode === 200 && empty($body['error'])) {
+                // Google often loads the AI Overview separately: SerpApi then only returns a page_token,
+                // and the content needs a second request (engine=google_ai_overview).
+                $overview = $body['ai_overview'] ?? null;
+                if (is_array($overview) && !empty($overview['page_token']) && empty($overview['text_blocks'])) {
+                    $full = $this->fetchSerpApiAiOverview((string)$overview['page_token'], $apiKey);
+                    if ($full !== null) {
+                        $body['ai_overview'] = $full;
+                    }
+                }
                 $result = $this->parse($body, $keyword);
                 $result['provider'] = 'serpapi';
                 return $result;
@@ -112,19 +121,85 @@ class AiOverviewExtractor
 
         $locale = $this->getDataForSeoLocale($language);
 
-        $params = [
-            'keyword'       => $keyword,
-            'location_code' => $locale['location_code'],
-            'language_code' => $locale['language_code'],
-        ];
+        // The real Google result page incl. the AI Overview. (This used LLM Mentions search_mentions
+        // before, which is a database of LLM answers and does not contain Google's AI Overview.)
+        $items = $this->dataForSeoClient->serpOrganicLiveAdvanced(
+            $keyword,
+            (int)$locale['location_code'],
+            (string)$locale['language_code'],
+            '',
+            ['load_async_ai_overview' => true, 'depth' => 10]
+        );
 
-        $result = $this->dataForSeoClient->aiMentionsSearchMentions($params);
-
-        if (is_wp_error($result)) {
-            return $result;
+        if (is_wp_error($items)) {
+            return $items;
         }
 
-        return $this->parseDataForSeo($result, $keyword);
+        return $this->parseDataForSeoSerp((array)$items, $keyword);
+    }
+
+    /**
+     * DataForSEO SERP items → normalized shape. The 'ai_overview' item has `markdown` (full text),
+     * nested `items` and `references` ({source, domain, url, title, text}).
+     */
+    private function parseDataForSeoSerp(array $items, string $keyword): array
+    {
+        $hasAiOverview = false;
+        $textParts = [];
+        $sources = [];
+        $organic = [];
+
+        $collectReferences = function (array $node) use (&$collectReferences, &$sources, &$textParts): void {
+            foreach ((array)($node['references'] ?? []) as $reference) {
+                if (is_array($reference) && !empty($reference['url'])) {
+                    $sources[] = ['url' => (string)$reference['url'], 'title' => (string)($reference['title'] ?? $reference['source'] ?? '')];
+                }
+            }
+            foreach ((array)($node['items'] ?? []) as $child) {
+                if (!is_array($child)) {
+                    continue;
+                }
+                foreach (['title', 'text'] as $field) {
+                    if (!empty($child[$field]) && is_string($child[$field])) {
+                        $textParts[] = $child[$field];
+                    }
+                }
+                $collectReferences($child);
+            }
+        };
+
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $type = (string)($item['type'] ?? '');
+            if ($type === 'ai_overview') {
+                $hasAiOverview = true;
+                if (!empty($item['markdown']) && is_string($item['markdown'])) {
+                    $textParts[] = $item['markdown'];
+                }
+                $collectReferences($item);
+            } elseif ($type === 'organic') {
+                $organic[] = [
+                    'title'   => (string)($item['title'] ?? ''),
+                    'url'     => (string)($item['url'] ?? ''),
+                    'snippet' => (string)($item['description'] ?? ''),
+                ];
+            }
+        }
+
+        $unique = [];
+        foreach ($sources as $source) {
+            $unique[$source['url']] = $source;
+        }
+
+        return [
+            'keyword'         => $keyword,
+            'has_ai_overview' => $hasAiOverview,
+            'ai_text'         => implode("\n", array_unique(array_filter($textParts))),
+            'ai_sources'      => array_values($unique),
+            'organic_top'     => array_slice($organic, 0, 10),
+        ];
     }
 
     private function parse(array $body, string $keyword): array
@@ -162,8 +237,61 @@ class AiOverviewExtractor
         ];
     }
 
+    /** Full AI Overview for a SerpApi page_token, or null when it cannot be loaded. */
+    private function fetchSerpApiAiOverview(string $pageToken, string $apiKey): ?array
+    {
+        $url = add_query_arg([
+            'engine'     => 'google_ai_overview',
+            'page_token' => $pageToken,
+            'api_key'    => $apiKey,
+            'output'     => 'json',
+        ], 'https://serpapi.com/search');
+        $response = wp_remote_get($url, ['timeout' => 30]);
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return null;
+        }
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        return is_array($body['ai_overview'] ?? null) ? $body['ai_overview'] : null;
+    }
+
+    /**
+     * Text of SerpApi's text_blocks (paragraphs, lists incl. nested lists, expandable blocks, tables).
+     */
+    private function textFromBlocks(array $blocks): array
+    {
+        $parts = [];
+        foreach ($blocks as $block) {
+            if (!is_array($block)) {
+                continue;
+            }
+            foreach (['title', 'snippet'] as $field) {
+                if (!empty($block[$field]) && is_string($block[$field])) {
+                    $parts[] = $block[$field];
+                }
+            }
+            if (!empty($block['list']) && is_array($block['list'])) {
+                $parts = array_merge($parts, $this->textFromBlocks($block['list']));
+            }
+            if (!empty($block['text_blocks']) && is_array($block['text_blocks'])) {
+                $parts = array_merge($parts, $this->textFromBlocks($block['text_blocks']));
+            }
+            if (!empty($block['table']) && is_array($block['table'])) {
+                foreach ($block['table'] as $row) {
+                    if (is_array($row)) {
+                        $parts[] = implode(' | ', array_filter(array_map(static fn($cell) => is_scalar($cell) ? (string)$cell : '', $row)));
+                    }
+                }
+            }
+        }
+        return $parts;
+    }
+
     private function extractText(array $overview): string
     {
+        if (!empty($overview['text_blocks']) && is_array($overview['text_blocks'])) {
+            return implode("\n", array_filter($this->textFromBlocks($overview['text_blocks'])));
+        }
+
         if (isset($overview['text']) && is_string($overview['text'])) {
             return $overview['text'];
         }
@@ -195,6 +323,7 @@ class AiOverviewExtractor
     {
         $sources = [];
         $candidates = [
+            $overview['references'] ?? [], // SerpApi: {title, link, snippet, source, index}
             $overview['inline_links'] ?? [],
             $overview['sources'] ?? [],
             $overview['inline_citations'] ?? [],
@@ -253,56 +382,5 @@ class AiOverviewExtractor
         ];
 
         return $map[$lang] ?? $map['nl'];
-    }
-
-    /**
-     * Parse DataForSEO AI Mentions search_mentions response into the same
-     * normalized shape as the SerpApi parse() method.
-     */
-    private function parseDataForSeo(array $response, string $keyword): array
-    {
-        $tasks = $response['tasks'] ?? [];
-        $result = $tasks[0]['result'] ?? [];
-
-        // DataForSEO may return a list of mention items
-        $items = $result[0]['items'] ?? $result['items'] ?? [];
-
-        $hasAiOverview = !empty($items);
-        $text = '';
-        $sources = [];
-        $organic = [];
-
-        foreach ($items as $item) {
-            // Collect AI-generated text snippets
-            $snippet = $item['text'] ?? $item['snippet'] ?? $item['content'] ?? '';
-            if (!empty($snippet) && is_string($snippet)) {
-                $text .= ($text ? "\n" : '') . $snippet;
-            }
-
-            // Collect cited sources
-            $url = $item['url'] ?? $item['link'] ?? $item['source'] ?? '';
-            $title = $item['title'] ?? $item['name'] ?? '';
-            if (!empty($url) && is_string($url)) {
-                $sources[] = ['url' => $url, 'title' => is_string($title) ? $title : ''];
-            }
-
-            // Some items may be organic results referenced by the AI
-            $type = $item['type'] ?? '';
-            if ($type === 'organic' || !empty($item['rank_position'])) {
-                $organic[] = [
-                    'title'   => is_string($title) ? $title : '',
-                    'url'     => is_string($url) ? $url : '',
-                    'snippet' => is_string($snippet) ? $snippet : '',
-                ];
-            }
-        }
-
-        return [
-            'keyword'         => $keyword,
-            'has_ai_overview' => $hasAiOverview,
-            'ai_text'         => $text,
-            'ai_sources'      => $sources,
-            'organic_top'     => array_slice($organic, 0, 10),
-        ];
     }
 }
