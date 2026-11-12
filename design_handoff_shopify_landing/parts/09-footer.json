@@ -1,0 +1,133 @@
+{
+  "content": [
+    {
+      "id": "d7d10d1",
+      "elType": "container",
+      "isInner": false,
+      "elements": [
+        {
+          "id": "dd73e39",
+          "elType": "container",
+          "isInner": true,
+          "elements": [
+            {
+              "id": "26a23ee",
+              "elType": "widget",
+              "widgetType": "image",
+              "isInner": false,
+              "elements": [],
+              "settings": {
+                "image": {
+                  "url": "uploads/FYN-LOGO-DIA-SHORT300ppi.png"
+                },
+                "width": {
+                  "unit": "px",
+                  "size": 26
+                },
+                "height": {
+                  "unit": "px",
+                  "size": 26
+                }
+              }
+            },
+            {
+              "id": "85dd73a",
+              "elType": "container",
+              "isInner": true,
+              "elements": [],
+              "settings": {
+                "flex_direction": "column",
+                "flex_gap": {
+                  "unit": "px",
+                  "size": 0,
+                  "column": "0",
+                  "row": "0"
+                },
+                "content_width": "full",
+                "flex_grow": "1"
+              }
+            },
+            {
+              "id": "1247f21",
+              "elType": "widget",
+              "widgetType": "text-editor",
+              "isInner": false,
+              "elements": [],
+              "settings": {
+                "editor": "<p>© 2026 Fyndable B.V. · Alle rechten voorbehouden.</p>",
+                "text_color": "rgba(255,255,255,0.6)",
+                "align": "left",
+                "typography_typography": "custom",
+                "typography_font_family": "Outfit",
+                "typography_font_weight": "400",
+                "typography_font_size": {
+                  "unit": "px",
+                  "size": 12.5
+                },
+                "typography_line_height": {
+                  "unit": "em",
+                  "size": 1.6
+                },
+                "_margin": {
+                  "unit": "px",
+                  "top": 0,
+                  "right": 0,
+                  "bottom": 0,
+                  "left": 0,
+                  "isLinked": false
+                }
+              }
+            }
+          ],
+          "settings": {
+            "flex_direction": "row",
+            "flex_gap": {
+              "unit": "px",
+              "size": 16,
+              "column": "16",
+              "row": "0"
+            },
+            "content_width": "boxed",
+            "align_items": "center",
+            "boxed": "",
+            "max_width": {
+              "unit": "px",
+              "size": 1180
+            },
+            "flex_align_self": "center",
+            "width": {
+              "unit": "%",
+              "size": 100
+            }
+          }
+        }
+      ],
+      "settings": {
+        "content_width": "full",
+        "flex_gap": {
+          "unit": "px",
+          "size": 0,
+          "column": "0",
+          "row": "0"
+        },
+        "background_background": "classic",
+        "background_color": "#0f0a18",
+        "padding": {
+          "unit": "px",
+          "top": 30,
+          "right": 20,
+          "bottom": 30,
+          "left": 20,
+          "isLinked": false
+        }
+      }
+    }
+  ],
+  "page_settings": {
+    "background_background": "classic",
+    "background_color": "#ffffff"
+  },
+  "version": "0.4",
+  "title": "Fyndable — 09-footer",
+  "type": "page"
+}
