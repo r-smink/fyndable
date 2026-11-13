@@ -825,7 +825,7 @@ AI Overview context:
         foreach ($keywordResults as $result) {
             $hosts = [];
             foreach ((array)($result['ai_sources'] ?? []) as $source) {
-                $host = $this->normalizeHost((string)(parse_url((string)($source['url'] ?? ''), PHP_URL_HOST) ?: ''));
+                $host = $this->normalizeHost((string)(parse_url(AiOverviewExtractor::unwrapUrl((string)($source['url'] ?? '')), PHP_URL_HOST) ?: ''));
                 if ($host !== '') {
                     $hosts[] = $host;
                 }
@@ -861,9 +861,10 @@ AI Overview context:
         $jobs = [];
         foreach ($models as $provider => $model) {
             foreach ($testKeywords as $index => $keyword) {
-                $prompt = $language === 'en'
-                    ? sprintf('Give a concise, factual answer to this search query and cite the most useful online sources: %s', $keyword)
-                    : sprintf('Geef een beknopt, feitelijk antwoord op deze zoekopdracht en citeer de nuttigste online bronnen: %s', $keyword);
+                // The plain query, as a user would type it in ChatGPT/Gemini/Perplexity. A wrapped
+                // prompt ("give a concise answer and cite sources") produced different, shorter answers
+                // that named fewer businesses than the real chat apps.
+                $prompt = (string) $keyword;
                 // Only fields each platform supports (DataForSEO docs): Gemini has no country field,
                 // Perplexity Sonar searches the web by default. 1024 tokens = the minimum for
                 // reasoning models (Gemini Pro reasons automatically; fewer tokens gave an empty answer).
@@ -903,13 +904,17 @@ AI Overview context:
                     $errors[] = ['keyword' => $keyword, 'message' => trim(sprintf(__('Leeg antwoord van het model %s', 'sseo-ai-saas'), $modelUsed))];
                     continue;
                 }
-                $tests[] = $this->platformTest(
+                $test = $this->platformTest(
                     $keyword,
                     $answer,
                     $this->extractHostsFromResponse($response),
                     $targetHost,
                     $brandTerms
                 );
+                // Kept so the admin can see what the model actually answered (admin report only, never the PDF).
+                $test['answer'] = mb_substr(trim($answer), 0, 4000);
+                $test['model'] = (string)($response['tasks'][0]['result'][0]['model_name'] ?? $response['tasks'][0]['data']['model_name'] ?? $model);
+                $tests[] = $test;
             }
             $platforms[$provider] = $this->summarizePlatformTests($tests);
             if ($errors) {
@@ -1017,7 +1022,7 @@ AI Overview context:
         $walk($response);
         $hosts = [];
         foreach ($urls as $url) {
-            $host = $this->normalizeHost((string)(parse_url(rtrim($url, '.,);'), PHP_URL_HOST) ?: ''));
+            $host = $this->normalizeHost((string)(parse_url(AiOverviewExtractor::unwrapUrl(rtrim($url, '.,);')), PHP_URL_HOST) ?: ''));
             if ($host !== '') {
                 $hosts[] = $host;
             }
@@ -1071,7 +1076,20 @@ AI Overview context:
     {
         $candidates = [];
         foreach ($brandNames as $name) {
-            $candidates[] = (string)$name;
+            $name = trim((string)$name);
+            if ($name === '') {
+                continue;
+            }
+            $candidates[] = $name;
+            // "Thuis Vitaal Nieuw-West - Ergotherapie en Valpreventie": the part before a separator
+            // is the name; AI answers often shorten it further ("Thuis Vitaal"), so word prefixes of
+            // two or more words count too (the keyword filter below drops prefixes like "beste ergotherapeut").
+            $core = trim((string) preg_split('/\s[-–—|:]\s|\s\(/u', $name)[0]);
+            $candidates[] = $core;
+            $words = preg_split('/\s+/u', $this->normalizeBrandText($core)) ?: [];
+            for ($n = count($words) - 1; $n >= 2; $n--) {
+                $candidates[] = implode(' ', array_slice($words, 0, $n));
+            }
         }
         $labels = array_values(array_filter(explode('.', $targetHost)));
         if (count($labels) >= 2) {
@@ -1116,9 +1134,10 @@ AI Overview context:
 
         foreach ($terms as $term) {
             $target = str_replace(' ', '', $term);
+            $maxWords = max(4, substr_count($term, ' ') + 2);
             for ($i = 0; $i < $count; $i++) {
                 $joined = '';
-                for ($n = 0; $n < 4 && $i + $n < $count; $n++) {
+                for ($n = 0; $n < $maxWords && $i + $n < $count; $n++) {
                     $joined .= $words[$i + $n];
                     if ($joined === $target) {
                         $start = $tokens[$i][1];
@@ -1185,7 +1204,7 @@ AI Overview context:
             $cited = false;
             $sourceHosts = [];
             foreach ($kr['ai_sources'] as $source) {
-                $host = $this->normalizeHost((string)(parse_url($source['url'], PHP_URL_HOST) ?: ''));
+                $host = $this->normalizeHost((string)(parse_url(AiOverviewExtractor::unwrapUrl((string)$source['url']), PHP_URL_HOST) ?: ''));
                 if ($host) {
                     $sourceHosts[] = $host;
                 }
@@ -1197,11 +1216,12 @@ AI Overview context:
             $competitors = [];
             $targetPosition = null;
             foreach ($kr['organic_top'] as $idx => $item) {
+                $item['url'] = AiOverviewExtractor::unwrapUrl((string)$item['url']);
                 $host = $this->normalizeHost((string)(parse_url($item['url'], PHP_URL_HOST) ?: ''));
                 if ($host && $this->isTargetHost($host, $targetHost) && $targetPosition === null) {
                     $targetPosition = $idx + 1;
                 }
-                if ($host && !$this->isTargetHost($host, $targetHost) && !in_array($host, array_column($competitors, 'host'), true)) {
+                if ($host && !$this->isTargetHost($host, $targetHost) && !$this->isGenericHost($host) && !in_array($host, array_column($competitors, 'host'), true)) {
                     $competitors[] = [
                         'host'  => $host,
                         'title' => $item['title'],

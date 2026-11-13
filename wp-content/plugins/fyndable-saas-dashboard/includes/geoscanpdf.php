@@ -778,14 +778,7 @@ td.kw-competitors { font-size: 8.6pt; color: #657083; }
 
     private function competitorHosts(array $competitors): string
     {
-        $hosts = [];
-        foreach ($competitors as $competitor) {
-            $host = $this->host((string)($competitor['host'] ?? ''));
-            if ($host !== '') {
-                $hosts[] = $host;
-            }
-        }
-        return implode(', ', array_values(array_unique($hosts)));
+        return implode(', ', GeoScanReport::displayCompetitorHosts($competitors));
     }
 
     private function e(string $value): string

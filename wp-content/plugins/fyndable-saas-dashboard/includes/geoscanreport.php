@@ -24,6 +24,29 @@ class GeoScanReport
      * in which the brand was found, and why a test failed. Admin-only view; the prospect PDF does not
      * show this detail.
      */
+    /**
+     * Competitor hosts for display. Scans before 1.11.6 stored Google's redirect link
+     * (google.com/goto?url=…) as the competitor, so the host is re-read from the target URL
+     * and Google itself is left out.
+     *
+     * @return string[]
+     */
+    public static function displayCompetitorHosts(array $competitors): array
+    {
+        $hosts = [];
+        foreach ($competitors as $competitor) {
+            $competitor = (array)$competitor;
+            $url = AiOverviewExtractor::unwrapUrl((string)($competitor['url'] ?? ''));
+            $host = (string)(parse_url($url, PHP_URL_HOST) ?: ($competitor['host'] ?? ''));
+            $host = preg_replace('/^www\./i', '', strtolower($host)) ?: '';
+            if ($host === '' || preg_match('/(^|\.)google\.[a-z.]+$/', $host)) {
+                continue;
+            }
+            $hosts[$host] = true;
+        }
+        return array_keys($hosts);
+    }
+
     private function renderPlatformTests(array $platforms): void
     {
         if (!$platforms) {
@@ -73,7 +96,16 @@ class GeoScanReport
                                 echo esc_html(__('Bronnen:', 'sseo-ai-saas') . ' ' . implode(', ', array_slice((array)$test['source_hosts'], 0, 6)));
                             } else {
                                 echo '—';
-                            } ?></td>
+                            }
+                            if (!empty($test['answer'])) : ?>
+                            <details style="margin-top:6px;">
+                                <summary style="cursor:pointer;"><?php
+                                    echo esc_html(!empty($test['model'])
+                                        ? sprintf(__('Volledig antwoord (%s)', 'sseo-ai-saas'), (string)$test['model'])
+                                        : __('Volledig antwoord', 'sseo-ai-saas')); ?></summary>
+                                <div style="white-space:pre-wrap; max-height:320px; overflow:auto; margin-top:6px; padding:8px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:4px; font-size:12px;"><?php echo esc_html((string)$test['answer']); ?></div>
+                            </details>
+                            <?php endif; ?></td>
                     </tr>
                     <?php endforeach;
                     foreach ($errors as $error) : $error = (array)$error; ?>
@@ -334,11 +366,11 @@ class GeoScanReport
                                     </td>
                                     <td>
                                         <?php
-                                        $competitors = (array)($kw['competitor_citations'] ?? []);
+                                        $competitors = self::displayCompetitorHosts((array)($kw['competitor_citations'] ?? []));
                                         if ($competitors) :
                                             echo '<ul class="sseo-geo-competitor-list">';
-                                            foreach (array_slice($competitors, 0, 3) as $c) {
-                                                echo '<li>' . esc_html($c['host'] ?? '') . '</li>';
+                                            foreach (array_slice($competitors, 0, 3) as $host) {
+                                                echo '<li>' . esc_html($host) . '</li>';
                                             }
                                             echo '</ul>';
                                         else :

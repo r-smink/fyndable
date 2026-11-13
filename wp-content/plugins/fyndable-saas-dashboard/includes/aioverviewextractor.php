@@ -10,6 +10,36 @@ namespace SSEOAISaaS;
  */
 class AiOverviewExtractor
 {
+    /**
+     * Google wraps result links in its own redirect (google.com/goto?url=…&gsessionid=…, older:
+     * google.com/url?q=…). Return the target URL, so hosts, competitors and the own position are
+     * read from the real site instead of google.com.
+     */
+    public static function unwrapUrl(string $url): string
+    {
+        for ($i = 0; $i < 2; $i++) {
+            $parts = parse_url($url);
+            $host = strtolower((string)($parts['host'] ?? ''));
+            if ($host === '' || !preg_match('/(^|\.)google\.[a-z.]+$/', $host)
+                || !in_array(rtrim((string)($parts['path'] ?? ''), '/'), ['/goto', '/url', '/aclk', '/link'], true)) {
+                return $url;
+            }
+            parse_str((string)($parts['query'] ?? ''), $query);
+            $target = '';
+            foreach (['url', 'q', 'u', 'adurl'] as $key) {
+                if (is_string($query[$key] ?? null) && preg_match('#^https?://#i', $query[$key])) {
+                    $target = $query[$key];
+                    break;
+                }
+            }
+            if ($target === '') {
+                return $url;
+            }
+            $url = $target;
+        }
+        return $url;
+    }
+
     private SaaSSettings $settings;
     private ?DataForSeoClient $dataForSeoClient = null;
 
@@ -151,7 +181,7 @@ class AiOverviewExtractor
         $collectReferences = function (array $node) use (&$collectReferences, &$sources, &$textParts): void {
             foreach ((array)($node['references'] ?? []) as $reference) {
                 if (is_array($reference) && !empty($reference['url'])) {
-                    $sources[] = ['url' => (string)$reference['url'], 'title' => (string)($reference['title'] ?? $reference['source'] ?? '')];
+                    $sources[] = ['url' => self::unwrapUrl((string)$reference['url']), 'title' => (string)($reference['title'] ?? $reference['source'] ?? '')];
                 }
             }
             foreach ((array)($node['items'] ?? []) as $child) {
@@ -181,7 +211,7 @@ class AiOverviewExtractor
             } elseif ($type === 'organic') {
                 $organic[] = [
                     'title'   => (string)($item['title'] ?? ''),
-                    'url'     => (string)($item['url'] ?? ''),
+                    'url'     => self::unwrapUrl((string)($item['url'] ?? '')),
                     'snippet' => (string)($item['description'] ?? ''),
                 ];
             }
@@ -222,7 +252,7 @@ class AiOverviewExtractor
         foreach ($body['organic_results'] ?? [] as $item) {
             $organic[] = [
                 'title'   => $item['title'] ?? '',
-                'url'     => $item['link'] ?? $item['url'] ?? '',
+                'url'     => self::unwrapUrl((string)($item['link'] ?? $item['url'] ?? '')),
                 'snippet' => $item['snippet'] ?? '',
             ];
         }
@@ -348,7 +378,7 @@ class AiOverviewExtractor
                 $title = $link['title'] ?? $link['name'] ?? $link['text'] ?? '';
 
                 if (!empty($url)) {
-                    $sources[] = ['url' => $url, 'title' => $title];
+                    $sources[] = ['url' => self::unwrapUrl((string)$url), 'title' => $title];
                 }
             }
         }
