@@ -15,6 +15,30 @@ class AiOverviewExtractor
      * google.com/url?q=…). Return the target URL, so hosts, competitors and the own position are
      * read from the real site instead of google.com.
      */
+    /**
+     * The real link of a SERP item. Google's /goto parameter is encrypted, so when the provider
+     * could not resolve it (DataForSEO live mode resolves ~50% since Google throttles /goto), the
+     * host comes from the item's own domain field (DataForSEO `domain`, SerpApi `displayed_link`).
+     */
+    public static function resolveLink(string $url, string $domainHint = ''): string
+    {
+        $url = self::unwrapUrl($url);
+        if (!self::isGoogleRedirect($url)) {
+            return $url;
+        }
+        $hint = trim(strtok(trim($domainHint), " 	›>") ?: '');
+        $host = (string)(parse_url(preg_match('#^https?://#i', $hint) ? $hint : 'https://' . $hint, PHP_URL_HOST) ?: '');
+        return ($host !== '' && str_contains($host, '.')) ? 'https://' . strtolower($host) . '/' : $url;
+    }
+
+    /** A Google redirect link (/goto, /url, /aclk, /link on a google domain) that could not be unwrapped. */
+    public static function isGoogleRedirect(string $url): bool
+    {
+        $parts = parse_url($url);
+        return preg_match('/(^|\.)google\.[a-z.]+$/', strtolower((string)($parts['host'] ?? '')))
+            && in_array(rtrim((string)($parts['path'] ?? ''), '/'), ['/goto', '/url', '/aclk', '/link'], true);
+    }
+
     public static function unwrapUrl(string $url): string
     {
         for ($i = 0; $i < 2; $i++) {
@@ -181,7 +205,7 @@ class AiOverviewExtractor
         $collectReferences = function (array $node) use (&$collectReferences, &$sources, &$textParts): void {
             foreach ((array)($node['references'] ?? []) as $reference) {
                 if (is_array($reference) && !empty($reference['url'])) {
-                    $sources[] = ['url' => self::unwrapUrl((string)$reference['url']), 'title' => (string)($reference['title'] ?? $reference['source'] ?? '')];
+                    $sources[] = ['url' => self::resolveLink((string)$reference['url'], (string)($reference['domain'] ?? '')), 'title' => (string)($reference['title'] ?? $reference['source'] ?? '')];
                 }
             }
             foreach ((array)($node['items'] ?? []) as $child) {
@@ -211,7 +235,7 @@ class AiOverviewExtractor
             } elseif ($type === 'organic') {
                 $organic[] = [
                     'title'   => (string)($item['title'] ?? ''),
-                    'url'     => self::unwrapUrl((string)($item['url'] ?? '')),
+                    'url'     => self::resolveLink((string)($item['url'] ?? ''), (string)($item['domain'] ?? '')),
                     'snippet' => (string)($item['description'] ?? ''),
                 ];
             }
@@ -252,7 +276,7 @@ class AiOverviewExtractor
         foreach ($body['organic_results'] ?? [] as $item) {
             $organic[] = [
                 'title'   => $item['title'] ?? '',
-                'url'     => self::unwrapUrl((string)($item['link'] ?? $item['url'] ?? '')),
+                'url'     => self::resolveLink((string)($item['link'] ?? $item['url'] ?? ''), (string)($item['displayed_link'] ?? '')),
                 'snippet' => $item['snippet'] ?? '',
             ];
         }
@@ -378,7 +402,7 @@ class AiOverviewExtractor
                 $title = $link['title'] ?? $link['name'] ?? $link['text'] ?? '';
 
                 if (!empty($url)) {
-                    $sources[] = ['url' => self::unwrapUrl((string)$url), 'title' => $title];
+                    $sources[] = ['url' => self::resolveLink((string)$url, (string)($link['displayed_link'] ?? $link['domain'] ?? '')), 'title' => $title];
                 }
             }
         }
