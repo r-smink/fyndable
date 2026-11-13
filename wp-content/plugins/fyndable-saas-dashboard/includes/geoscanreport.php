@@ -47,6 +47,75 @@ class GeoScanReport
         return array_keys($hosts);
     }
 
+    /**
+     * Rows for the per-keyword table, combining Google (AI Overview + organic results) with the
+     * ChatGPT/Gemini/Perplexity/Claude tests of the same keyword. Derived from stored data, so
+     * older scans get the same view. Each row: keyword, has_ai_overview, mentioned,
+     * mentioned_on (platform labels), competitors (hosts; AI-cited first, then organic).
+     */
+    public static function keywordRows(array $report): array
+    {
+        $labels = ['google_ai_overviews' => 'Google', 'chatgpt' => 'ChatGPT', 'gemini' => 'Gemini', 'perplexity' => 'Perplexity', 'claude' => 'Claude'];
+        $target = preg_replace('/^www\./i', '', strtolower((string)(parse_url((string)($report['url'] ?? ''), PHP_URL_HOST) ?: ''))) ?: '';
+        $generic = '/(^|\.)(google\.[a-z.]+|bing\.com|youtube\.com|wikipedia\.org|linkedin\.com|facebook\.com|instagram\.com|x\.com|reddit\.com)$/';
+
+        // Platform tests per keyword.
+        $byKeyword = [];
+        foreach ((array)($report['platform_visibility'] ?? []) as $platform => $data) {
+            foreach ((array)($data['results'] ?? []) as $test) {
+                $test = (array)$test;
+                $key = mb_strtolower(trim((string)($test['keyword'] ?? '')));
+                if ($key === '') {
+                    continue;
+                }
+                $byKeyword[$key][(string)$platform] = $test;
+            }
+        }
+
+        $rows = [];
+        foreach ((array)($report['keywords_analysis'] ?? []) as $kw) {
+            $kw = (array)$kw;
+            $keyword = (string)($kw['keyword'] ?? '');
+            $tests = $byKeyword[mb_strtolower(trim($keyword))] ?? [];
+
+            $mentionedOn = [];
+            if (!empty($kw['target_cited'])) {
+                $mentionedOn['google_ai_overviews'] = $labels['google_ai_overviews'];
+            }
+            $aiHosts = [];
+            foreach ($tests as $platform => $test) {
+                if (!empty($test['mentioned'])) {
+                    $mentionedOn[$platform] = $labels[$platform] ?? ucfirst($platform);
+                }
+                foreach (array_unique((array)($test['source_hosts'] ?? [])) as $host) {
+                    $host = preg_replace('/^www\./i', '', strtolower((string)$host)) ?: '';
+                    if ($host === '' || preg_match($generic, $host) || ($target !== '' && ($host === $target || str_ends_with($host, '.' . $target)))) {
+                        continue;
+                    }
+                    $aiHosts[$host] = ($aiHosts[$host] ?? 0) + 1;
+                }
+            }
+            arsort($aiHosts);
+            $competitors = array_keys($aiHosts);
+            foreach (self::displayCompetitorHosts((array)($kw['competitor_citations'] ?? [])) as $host) {
+                if (!in_array($host, $competitors, true) && !preg_match($generic, $host)) {
+                    $competitors[] = $host;
+                }
+            }
+            // Keep the platform order of $labels.
+            $mentionedOn = array_values(array_intersect_key(array_replace($labels, $mentionedOn), $mentionedOn));
+
+            $rows[] = [
+                'keyword'         => $keyword,
+                'has_ai_overview' => !empty($kw['has_ai_overview']),
+                'mentioned'       => (bool)$mentionedOn,
+                'mentioned_on'    => $mentionedOn,
+                'competitors'     => $competitors,
+            ];
+        }
+        return $rows;
+    }
+
     private function renderPlatformTests(array $platforms): void
     {
         if (!$platforms) {
@@ -138,7 +207,7 @@ class GeoScanReport
         $data = $scan['result'] ?? [];
         $score = (int)($data['score'] ?? 0);
         $breakdown = $data['breakdown'] ?? [];
-        $keywords = $data['keywords_analysis'] ?? [];
+        $keywords = self::keywordRows((array)$data);
         ?>
         <style>
             .sseo-geo-report-print-header { display: none; }
@@ -338,15 +407,15 @@ class GeoScanReport
 
             <div class="sseo-geo-report-card">
                 <h2><?php esc_html_e('Zoekwoordanalyse', 'sseo-ai-saas'); ?></h2>
-                <p class="sseo-geo-keywords-legend"><?php esc_html_e('Deze tabel laat per zoekwoord zien of er een AI-overzicht beschikbaar is, of jouw bedrijf daarin wordt vermeld en welke concurrenten wél worden genoemd. Let op: Ja bij AI-overzicht betekent dat er een AI-samenvatting bestaat; Ja bij Jouw bedrijf vermeld betekent dat jouw website daadwerkelijk in die samenvatting staat.', 'sseo-ai-saas'); ?></p>
+                <p class="sseo-geo-keywords-legend"><?php esc_html_e('Per zoekwoord: of Google een AI-overzicht toont, op welke AI-platforms jouw bedrijf wordt genoemd of geciteerd (Google, ChatGPT, Gemini, Perplexity, Claude) en welke concurrenten daar wel worden genoemd. ChatGPT, Gemini, Perplexity en Claude worden alleen voor de eerste 3 zoekwoorden getest.', 'sseo-ai-saas'); ?></p>
                 <div class="sseo-geo-keywords-table-wrap">
                     <table class="sseo-geo-keywords-table">
                         <thead>
                             <tr>
                                 <th><?php esc_html_e('Zoekwoord', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('AI-overzicht', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Jouw bedrijf vermeld', 'sseo-ai-saas'); ?></th>
-                                <th><?php esc_html_e('Concurrenten vermeld', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Google AI-overzicht', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Jouw bedrijf genoemd', 'sseo-ai-saas'); ?></th>
+                                <th><?php esc_html_e('Concurrenten genoemd', 'sseo-ai-saas'); ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -361,18 +430,18 @@ class GeoScanReport
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if ($kw['target_cited']) : ?>
+                                        <?php if ($kw['mentioned']) : ?>
                                             <span class="sseo-geo-status yes"><?php esc_html_e('Ja', 'sseo-ai-saas'); ?></span>
+                                            <div class="description"><?php echo esc_html(implode(', ', $kw['mentioned_on'])); ?></div>
                                         <?php else : ?>
                                             <span class="sseo-geo-status no"><?php esc_html_e('Nee', 'sseo-ai-saas'); ?></span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php
-                                        $competitors = self::displayCompetitorHosts((array)($kw['competitor_citations'] ?? []));
-                                        if ($competitors) :
+                                        if ($kw['competitors']) :
                                             echo '<ul class="sseo-geo-competitor-list">';
-                                            foreach (array_slice($competitors, 0, 3) as $host) {
+                                            foreach (array_slice($kw['competitors'], 0, 5) as $host) {
                                                 echo '<li>' . esc_html($host) . '</li>';
                                             }
                                             echo '</ul>';

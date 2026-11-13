@@ -182,14 +182,17 @@ class PublicApi
         $result = $scan['result'] ?? [];
 
         $keywordsAnalysis = [];
-        foreach ($result['keywords_analysis'] ?? [] as $kw) {
+        // Google plus the ChatGPT/Gemini/Perplexity/Claude tests of the same keyword (same rows as the report).
+        $rows = GeoScanReport::keywordRows((array)$result);
+        foreach (array_values((array)($result['keywords_analysis'] ?? [])) as $i => $kw) {
+            $row = $rows[$i] ?? ['mentioned' => false, 'competitors' => []];
             $keywordsAnalysis[] = [
                 'keyword'           => $kw['keyword'] ?? '',
                 'has_ai_overview'   => (bool)($kw['has_ai_overview'] ?? false),
-                'target_cited'      => (bool)($kw['target_cited'] ?? false),
+                'target_cited'      => (bool)$row['mentioned'],
                 'organic_position'  => isset($kw['target_organic_position']) ? (int)$kw['target_organic_position'] : null,
                 'ai_sources_count'  => (int)($kw['ai_sources_count'] ?? 0),
-                'competitors_count' => count($kw['competitor_citations'] ?? []),
+                'competitors_count' => count($row['competitors']),
             ];
         }
 
