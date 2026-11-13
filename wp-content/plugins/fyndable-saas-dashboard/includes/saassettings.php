@@ -125,6 +125,18 @@ class SaaSSettings
             'default' => true,
             'sanitize_callback' => fn($v) => ($v === '1' || $v === true || $v === 1),
         ]);
+        // Per platform: 'auto' (newest consumer model), 'off', or a DataForSEO model_name.
+        register_setting('ai_seo_saas_settings', 'sseo_ai_saas_geo_platform_models', [
+            'default' => [],
+            'sanitize_callback' => function ($value): array {
+                $clean = [];
+                foreach (self::GEO_PLATFORMS as $platform => $label) {
+                    $model = is_array($value) ? (string) ($value[$platform] ?? 'auto') : 'auto';
+                    $clean[$platform] = preg_match('/^[A-Za-z0-9._:-]{1,80}$/', $model) ? $model : 'auto';
+                }
+                return $clean;
+            },
+        ]);
 
         // OpenRouter (multi-model gateway)
         register_setting('ai_seo_saas_settings', 'sseo_ai_saas_openrouter_api_key');
@@ -375,6 +387,26 @@ class SaaSSettings
     public function isGeoPlatformTestsEnabled(): bool
     {
         return (bool) get_option('sseo_ai_saas_geo_platform_tests', true);
+    }
+
+    /** AI platforms tested via DataForSEO LLM Responses (Google AI Overview is separate). */
+    public const GEO_PLATFORMS = ['chatgpt' => 'ChatGPT', 'gemini' => 'Gemini', 'perplexity' => 'Perplexity', 'claude' => 'Claude'];
+
+    /**
+     * Model per GEO platform: 'auto' = the newest model of the consumer app (picked from
+     * DataForSEO's model list per scan), 'off' = not tested, otherwise a DataForSEO model_name.
+     *
+     * @return array<string, string>
+     */
+    public function getGeoPlatformModels(): array
+    {
+        $stored = (array) get_option('sseo_ai_saas_geo_platform_models', []);
+        $models = [];
+        foreach (self::GEO_PLATFORMS as $platform => $label) {
+            $model = (string) ($stored[$platform] ?? 'auto');
+            $models[$platform] = $model !== '' ? $model : 'auto';
+        }
+        return $models;
     }
     
     /**
@@ -845,8 +877,38 @@ class SaaSSettings
                             <td>
                                 <input type="hidden" name="sseo_ai_saas_geo_platform_tests" value="0">
                                 <label><input type="checkbox" name="sseo_ai_saas_geo_platform_tests" id="sseo_geo_platform_tests" value="1" <?php checked($this->isGeoPlatformTestsEnabled()); ?>>
-                                    <?php esc_html_e('ChatGPT, Gemini en Perplexity meetesten (via DataForSEO)', 'sseo-ai-saas'); ?></label>
-                                <p class="description"><?php esc_html_e('Per scan 9 live AI-vragen (3 platforms × 3 zoekwoorden), betaald uit het DataForSEO-tegoed. Uit: de scan test alleen Google AI Overview; de andere platforms staan dan als "Niet getest" in het rapport.', 'sseo-ai-saas'); ?></p>
+                                    <?php esc_html_e('ChatGPT, Gemini, Perplexity en Claude meetesten (via DataForSEO)', 'sseo-ai-saas'); ?></label>
+                                <p class="description"><?php esc_html_e('Per scan 3 live AI-vragen per platform (de eerste 3 zoekwoorden), betaald uit het DataForSEO-tegoed. Uit: de scan test alleen Google AI Overview; de andere platforms staan dan als "Niet getest" in het rapport.', 'sseo-ai-saas'); ?></p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row"><?php esc_html_e('GEO: model per platform', 'sseo-ai-saas'); ?></th>
+                            <td>
+                                <?php
+                                $platformModels = $this->getGeoPlatformModels();
+                                $dfsClient = new DataForSeoClient($this);
+                                foreach (self::GEO_PLATFORMS as $platform => $platformLabel) :
+                                    $current = $platformModels[$platform];
+                                    $available = $dfsClient->isConfigured() ? $dfsClient->llmModelNames($platform) : [];
+                                    $autoPick = $dfsClient->isConfigured() ? $dfsClient->latestLlmModel($platform) : '';
+                                    if ($current !== 'auto' && $current !== 'off' && !in_array($current, $available, true)) {
+                                        $available[] = $current;
+                                    } ?>
+                                <p style="margin:0 0 6px;">
+                                    <label style="display:inline-block; min-width:90px;" for="sseo_geo_model_<?php echo esc_attr($platform); ?>"><?php echo esc_html($platformLabel); ?></label>
+                                    <select name="sseo_ai_saas_geo_platform_models[<?php echo esc_attr($platform); ?>]" id="sseo_geo_model_<?php echo esc_attr($platform); ?>">
+                                        <option value="auto" <?php selected($current, 'auto'); ?>><?php
+                                            echo esc_html(is_string($autoPick) && $autoPick !== ''
+                                                ? sprintf(__('Automatisch: nieuwste (nu %s)', 'sseo-ai-saas'), $autoPick)
+                                                : __('Automatisch: nieuwste', 'sseo-ai-saas')); ?></option>
+                                        <option value="off" <?php selected($current, 'off'); ?>><?php esc_html_e('Uit (niet testen)', 'sseo-ai-saas'); ?></option>
+                                        <?php foreach ($available as $modelName) : ?>
+                                        <option value="<?php echo esc_attr($modelName); ?>" <?php selected($current, $modelName); ?>><?php echo esc_html($modelName); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </p>
+                                <?php endforeach; ?>
+                                <p class="description"><?php esc_html_e('Automatisch kiest per scan het model dat gebruikers van de app nu krijgen, uit de modellijst van DataForSEO: ChatGPT = hoogste GPT-versie, Gemini = nieuwste Flash, Claude = nieuwste Sonnet, Perplexity = Sonar. Nieuwere en grotere modellen kosten meer DataForSEO-tegoed per vraag.', 'sseo-ai-saas'); ?></p>
                             </td>
                         </tr>
                         <tr>

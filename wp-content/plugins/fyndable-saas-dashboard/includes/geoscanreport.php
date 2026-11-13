@@ -52,7 +52,10 @@ class GeoScanReport
         if (!$platforms) {
             return;
         }
-        $labels = ['chatgpt' => 'ChatGPT', 'perplexity' => 'Perplexity', 'gemini' => 'Gemini', 'google_ai_overviews' => 'Google AI Overviews'];
+        $labels = ['chatgpt' => 'ChatGPT', 'perplexity' => 'Perplexity', 'gemini' => 'Gemini', 'claude' => 'Claude', 'google_ai_overviews' => 'Google AI Overviews'];
+        if (!isset($platforms['claude'])) {
+            unset($labels['claude']); // scans before Claude was added
+        }
         ?>
         <div class="sseo-geo-report-card sseo-geo-platform-tests">
             <h2><?php esc_html_e('AI-platformtests', 'sseo-ai-saas'); ?></h2>

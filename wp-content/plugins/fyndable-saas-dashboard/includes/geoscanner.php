@@ -836,25 +836,31 @@ AI Overview context:
         $platforms['google_ai_overviews'] = $this->summarizePlatformTests($googleTests);
 
         // Switched off in SaaS Settings ("GEO: AI-platformtests"): no DataForSEO LLM calls, shown as "not tested".
+        $notTested = ['status' => 'not_tested', 'visibility' => null, 'mentions' => 0, 'tests' => 0, 'results' => []];
         if (!$this->settings->isGeoPlatformTestsEnabled()) {
-            foreach (['chatgpt', 'gemini', 'perplexity'] as $provider) {
-                $platforms[$provider] = ['status' => 'not_tested', 'visibility' => null, 'mentions' => 0, 'tests' => 0, 'results' => []];
+            foreach (array_keys(SaaSSettings::GEO_PLATFORMS) as $provider) {
+                $platforms[$provider] = $notTested;
             }
             return $platforms;
         }
 
+        // Per platform 'auto' (newest model of the consumer app, resolved by DataForSeoClient from
+        // DataForSEO's model list), a fixed model_name, or 'off' (SaaS Settings → GEO: model per platform).
+        $models = [];
+        foreach ($this->settings->getGeoPlatformModels() as $provider => $model) {
+            if ($model === 'off') {
+                $platforms[$provider] = $notTested;
+            } else {
+                $models[$provider] = $model;
+            }
+        }
+
         if (!$this->dataForSeoClient->isConfigured()) {
-            foreach (['chatgpt', 'gemini', 'perplexity'] as $provider) {
+            foreach (array_keys($models) as $provider) {
                 $platforms[$provider] = $this->summarizePlatformTests([]);
             }
             return $platforms;
         }
-
-        $models = [
-            'chatgpt' => 'gpt-4.1-mini',
-            'gemini' => 'gemini-2.5-flash',
-            'perplexity' => 'sonar',
-        ];
         $testKeywords = array_slice($keywords, 0, 3);
 
         // All platform × keyword tests run in parallel: each live task can take up to 120 s.
@@ -866,16 +872,17 @@ AI Overview context:
                 // that named fewer businesses than the real chat apps.
                 $prompt = (string) $keyword;
                 // Only fields each platform supports (DataForSEO docs): Gemini has no country field,
-                // Perplexity Sonar searches the web by default. 1024 tokens = the minimum for
-                // reasoning models (Gemini Pro reasons automatically; fewer tokens gave an empty answer).
+                // Perplexity Sonar searches the web by default. 2048 tokens: reasoning models (GPT-5,
+                // Gemini Pro) spend part of the budget before answering (with 700 Gemini Pro answered "Ok.").
+                // Temperature is dropped for reasoning models in DataForSeoClient::prepareLlmRequest().
                 $params = [
                     'user_prompt' => mb_substr($prompt, 0, 500),
                     'model_name' => $model,
-                    'max_output_tokens' => 1024,
+                    'max_output_tokens' => 2048,
                     'temperature' => 0.2,
                 ];
                 $country = $language === 'nl' ? 'NL' : 'US';
-                if ($provider === 'chatgpt') {
+                if ($provider === 'chatgpt' || $provider === 'claude') {
                     $params += ['web_search' => true, 'web_search_country_iso_code' => $country];
                 } elseif ($provider === 'gemini') {
                     $params['web_search'] = true;
@@ -885,7 +892,11 @@ AI Overview context:
                 $jobs[$provider . '|' . $index] = ['provider' => $provider, 'params' => $params];
             }
         }
-        $progress(74, sprintf(__('AI-platformtests: %d vragen aan ChatGPT, Gemini en Perplexity (kan tot 2 minuten duren)…', 'sseo-ai-saas'), count($jobs)));
+        $progress(74, sprintf(
+            __('AI-platformtests: %1$d vragen aan %2$s (kan tot 2 minuten duren)…', 'sseo-ai-saas'),
+            count($jobs),
+            implode(', ', array_intersect_key(SaaSSettings::GEO_PLATFORMS, $models))
+        ));
         $responses = $this->dataForSeoClient->llmResponsesLiveBatch($jobs);
 
         foreach ($models as $provider => $model) {

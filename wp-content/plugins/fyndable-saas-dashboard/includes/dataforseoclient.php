@@ -397,11 +397,21 @@ class DataForSeoClient
             return new \WP_Error('missing_params', __('user_prompt is required', 'sseo-ai-saas'));
         }
 
-        $model = $this->resolveLlmModel($paths[$provider], (string) ($params['model_name'] ?? ''), !empty($params['web_search']));
+        $requested = (string) ($params['model_name'] ?? '');
+        $model = $requested === 'auto'
+            ? $this->latestLlmModel($provider, $provider !== 'perplexity')
+            : $this->resolveLlmModel($paths[$provider], $requested, !empty($params['web_search']));
         if (is_wp_error($model)) {
             return $model;
         }
         $params['model_name'] = $model;
+        if ($provider === 'claude' && !empty($params['web_search_country_iso_code']) && empty($params['web_search'])) {
+            unset($params['web_search_country_iso_code']);
+        }
+        // Reasoning models (e.g. GPT-5) do not take temperature/top_p.
+        if ($this->isReasoningLlmModel($paths[$provider], $model)) {
+            unset($params['temperature'], $params['top_p']);
+        }
 
         return ['path' => '/ai_optimization/' . $paths[$provider] . '/llm_responses/live', 'params' => $params];
     }
@@ -463,6 +473,89 @@ class DataForSeoClient
         $pick = $candidates[0]['model_name'] ?? ($names[0] ?? '');
 
         return $pick !== '' ? (string) $pick : new \WP_Error('no_llm_model', __('No DataForSEO model available for this provider', 'sseo-ai-saas'));
+    }
+
+    /**
+     * The model a user of the consumer app gets today, picked from DataForSEO's model list
+     * (that list has no release dates, so the version in the name decides):
+     * ChatGPT = highest GPT version, Gemini = newest Flash, Claude = newest Sonnet,
+     * Perplexity = Sonar. Variants (mini/nano/lite/pro/codex/image/audio/preview/…) are skipped
+     * unless nothing else is left.
+     */
+    public function latestLlmModel(string $provider, bool $webSearch = true): string|\WP_Error
+    {
+        $paths = ['chatgpt' => 'chat_gpt', 'claude' => 'claude', 'gemini' => 'gemini', 'perplexity' => 'perplexity'];
+        $path = $paths[strtolower($provider)] ?? '';
+        if ($path === '') {
+            return new \WP_Error('invalid_provider', sprintf(__('Unknown LLM provider: %s', 'sseo-ai-saas'), $provider));
+        }
+        $models = $this->llmModels($path);
+        if (is_wp_error($models)) {
+            return $models;
+        }
+
+        $family = ['chat_gpt' => '/^gpt-\d/', 'gemini' => '/flash/', 'claude' => '/sonnet/', 'perplexity' => '/^sonar$|^sonar-\d/'][$path];
+        $variant = '/mini|nano|lite|image|audio|realtime|codex|preview|exp|pro|deep|research|reasoning|oss|turbo|instruct|search|tts|transcribe|vision|embedding/';
+
+        $pools = [];
+        $withSearch = $webSearch ? array_filter($models, static fn ($m) => !empty($m['web_search_supported'])) : $models;
+        foreach ([$withSearch, $models] as $set) {
+            $names = array_map(static fn ($m) => (string) $m['model_name'], $set);
+            $pools[] = array_filter($names, static fn ($n) => preg_match($family, $n) && !preg_match($variant, $n));
+            $pools[] = array_filter($names, static fn ($n) => preg_match($family, $n));
+            $pools[] = $names;
+        }
+        foreach ($pools as $pool) {
+            if (!$pool) {
+                continue;
+            }
+            usort($pool, function (string $a, string $b): int {
+                $va = self::llmModelVersion($a);
+                $vb = self::llmModelVersion($b);
+                if ($va !== $vb) {
+                    return $vb <=> $va;            // highest version first
+                }
+                return strlen($a) <=> strlen($b);  // then the base alias over dated snapshots
+            });
+            return (string) $pool[0];
+        }
+        return new \WP_Error('no_llm_model', __('No DataForSEO model available for this provider', 'sseo-ai-saas'));
+    }
+
+    /** "gpt-5.5" → 5.5, "claude-sonnet-4-5-20250929" → 4.5, "gemini-2.5-flash" → 2.5; dates are ignored. */
+    public static function llmModelVersion(string $name): float
+    {
+        $name = preg_replace('/\d{4}-\d{2}-\d{2}|\d{8}/', '', strtolower($name)) ?? '';
+        if (!preg_match('/(\d+)(?:[.-](\d{1,2})(?!\d))?/', $name, $m)) {
+            return 0.0;
+        }
+        return (float) ($m[1] . '.' . str_pad($m[2] ?? '0', 2, '0', STR_PAD_LEFT));
+    }
+
+    private function isReasoningLlmModel(string $providerPath, string $model): bool
+    {
+        $models = $this->llmModels($providerPath);
+        if (is_wp_error($models)) {
+            return false;
+        }
+        foreach ($models as $m) {
+            if (($m['model_name'] ?? '') === $model || str_starts_with((string) ($m['model_name'] ?? ''), $model . '-')) {
+                return !empty($m['reasoning']);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Model names DataForSEO offers for a platform (cached for a day), for the settings dropdowns.
+     *
+     * @return string[]
+     */
+    public function llmModelNames(string $provider): array
+    {
+        $paths = ['chatgpt' => 'chat_gpt', 'claude' => 'claude', 'gemini' => 'gemini', 'perplexity' => 'perplexity'];
+        $models = isset($paths[$provider]) ? $this->llmModels($paths[$provider]) : [];
+        return is_wp_error($models) ? [] : array_values(array_map(static fn ($m) => (string) $m['model_name'], $models));
     }
 
     /**
