@@ -16,6 +16,7 @@
     const cfg = window.FYN || {};
     const I18N = cfg.i18n || {};
     let pageInit = null;
+    let pageErrorInit = null;
     let pageRan = false;
 
     /** Translate a key from lang/{locale}/app.php or the page file ('js' group). */
@@ -52,7 +53,8 @@
         },
 
         openPricing(url) {
-            if (url) window.open(url, '_top');
+            const target = url || cfg.pricingUrl;
+            if (target) window.open(target, '_top');
         },
 
         // ------------------------------------------------------------------
@@ -106,6 +108,8 @@
             if (data.error === 'tier_too_low') return t('tier_too_low');
             if (data.error === 'limit_reached') return t('limit_reached');
             if (data.error === 'missing_scopes') return t('missing_scopes', { scopes: (data.missing_scopes || []).join(', ') });
+            // Session/connection problems: never show the raw code to the merchant.
+            if (['shop_not_installed', 'token_exchange_failed', 'invalid_session'].includes(data.error)) return t('session_error');
             return data.message || data.error || t('unknown_error');
         },
 
@@ -504,6 +508,14 @@
             pageInit = fn;
         },
 
+        /**
+         * Optional: what the page shows when /dashboard/context fails, so it never stays on a
+         * spinner (App Store review 2.1.1). Receives the error payload.
+         */
+        pageError(fn) {
+            pageErrorInit = fn;
+        },
+
         /** Pages that load their own context (home: overview) set this. */
         customContext: false,
     };
@@ -527,6 +539,7 @@
         const ctx = await Fyn.api('/dashboard/context');
         if (ctx.error) {
             Fyn.html('fyn-banners', Fyn.errorBanner(ctx));
+            if (pageErrorInit) pageErrorInit(ctx);
             return;
         }
         await Fyn.applyContext(ctx);

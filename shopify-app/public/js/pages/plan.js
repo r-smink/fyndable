@@ -24,7 +24,7 @@
             const text = t(full ? 'trial_full' : 'trial_text', { used: b.trial.used, max: b.trial.max, date: Fyn.fmtDate(b.trial.ends_at) });
             html = `<s-banner tone="${full ? 'warning' : 'info'}" heading="${esc(t('trial_title'))}">${esc(text)}${pricing(t('choose_plan'), 'secondary')}</s-banner>`;
         } else if (b.state === 'unknown') {
-            html = `<s-banner tone="warning" heading="${esc(t('unknown_title'))}">${esc(t('unknown_text'))}</s-banner>`;
+            html = `<s-banner tone="warning" heading="${esc(t('unknown_title'))}">${esc(t('unknown_text'))}${pricing(t('change_plan'), 'secondary')}</s-banner>`;
         } else {
             html = `<s-banner tone="critical" heading="${esc(t('required_title'))}">${esc(t('required_text'))}${pricing(t('choose_plan'), 'secondary')}</s-banner>`;
         }
@@ -34,5 +34,13 @@
     Fyn.page(async (ctx) => {
         // The context already refreshed the subscription (cached check).
         renderBilling(ctx.billing);
+    });
+
+    // Context failed: no spinner forever. Plans are managed on Shopify's own page, so that
+    // button always works (App Store review 1.2.3 / 2.1.1).
+    Fyn.pageError(() => {
+        Fyn.html('billing-card', `<s-banner tone="warning" heading="${esc(t('plan_unavailable_title'))}">${esc(t('plan_unavailable_text'))}`
+            + `<s-button slot="secondary-actions" variant="primary" onclick="Fyn.openPricing()">${esc(t('change_plan'))}</s-button>`
+            + `<s-button slot="secondary-actions" onclick="window.location.reload()">${esc(t('reload'))}</s-button></s-banner>`);
     });
 })();

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Shop;
 use Firebase\JWT\JWT;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class VerifyShopifySessionTest extends TestCase
@@ -89,5 +90,58 @@ class VerifyShopifySessionTest extends TestCase
         ]);
 
         $response->assertOk();
+    }
+
+    /**
+     * App Store review 1.2.2 / 2.1.1: after app/uninstalled the shop row stays with
+     * is_installed=false. Reopening the reinstalled app must re-mint a token and work,
+     * not answer "shop_not_installed".
+     */
+    public function test_reinstalled_shop_gets_a_new_token_and_is_marked_installed(): void
+    {
+        Shop::where('shop_domain', self::SHOP)->update([
+            'is_installed' => false,
+            'is_uninstalled' => true,
+            'access_token' => null,
+            'token_expires_at' => null,
+        ]);
+        Http::fake([
+            self::SHOP.'/admin/oauth/access_token' => Http::response([
+                'access_token' => 'shpat_new',
+                'refresh_token' => 'shprt_new',
+                'expires_in' => 3600,
+                'scope' => 'read_products',
+            ]),
+        ]);
+
+        $response = $this->getJson('/api/license/status', [
+            'Authorization' => 'Bearer '.$this->token(),
+        ]);
+
+        $response->assertOk();
+        $shop = Shop::where('shop_domain', self::SHOP)->first();
+        $this->assertTrue($shop->is_installed);
+        $this->assertFalse($shop->is_uninstalled);
+        $this->assertSame('shpat_new', $shop->access_token);
+        Http::assertSent(fn ($request) => str_contains($request->url(), '/admin/oauth/access_token')
+            && $request['grant_type'] === 'urn:ietf:params:oauth:grant-type:token-exchange');
+    }
+
+    public function test_reinstall_with_failing_token_exchange_keeps_the_shop_uninstalled(): void
+    {
+        Shop::where('shop_domain', self::SHOP)->update([
+            'is_installed' => false,
+            'is_uninstalled' => true,
+            'access_token' => null,
+            'token_expires_at' => null,
+        ]);
+        Http::fake([self::SHOP.'/admin/oauth/access_token' => Http::response(['error' => 'invalid_subject_token'], 400)]);
+
+        $response = $this->getJson('/api/license/status', [
+            'Authorization' => 'Bearer '.$this->token(),
+        ]);
+
+        $response->assertStatus(403)->assertJson(['error' => 'token_exchange_failed']);
+        $this->assertFalse(Shop::where('shop_domain', self::SHOP)->first()->is_installed);
     }
 }

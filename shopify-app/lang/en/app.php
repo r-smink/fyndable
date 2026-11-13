@@ -121,6 +121,8 @@ return [
         'reauth' => 'Re-authorize the app',
         'missing_scopes' => 'The app is missing permissions: {scopes}. Saving to Shopify fails until you re-authorize the app.',
         'select_item_first' => 'Select an item first',
+        'session_error' => 'We could not connect to your store. Reload the app. If this keeps happening, contact support.',
+        'reload' => 'Reload',
 
         // Tier lock (Built for Shopify 4.3.7: plan-gated features are labelled)
         'lock_title' => 'Available on {tier} and higher',
@@ -178,6 +180,8 @@ return [
         'unknown_title' => 'Plan status unavailable',
         'unknown_text' => 'We could not check your subscription right now. Please try again in a few minutes.',
         'plan_confirmed' => 'Thank you! Your plan is active.',
+        'plan_unavailable_title' => 'Plan details could not be loaded',
+        'plan_unavailable_text' => 'You can still choose, upgrade or downgrade your plan on the Shopify plan page.',
 
         // Settings
         // SEO audit (shared: home, content optimizer, SEO audit page)

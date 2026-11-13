@@ -115,6 +115,8 @@ return [
         'reauth' => 'App opnieuw autoriseren',
         'missing_scopes' => 'De app mist rechten: {scopes}. Opslaan in Shopify mislukt totdat je de app opnieuw autoriseert.',
         'select_item_first' => 'Selecteer eerst een item',
+        'session_error' => 'We konden geen verbinding maken met je winkel. Laad de app opnieuw. Blijft dit gebeuren, neem dan contact op met support.',
+        'reload' => 'Opnieuw laden',
 
         'lock_title' => 'Beschikbaar vanaf {tier}',
         'lock_free' => 'Kies een abonnement om deze functie te gebruiken.',
@@ -169,6 +171,8 @@ return [
         'unknown_title' => 'Abonnementsstatus niet beschikbaar',
         'unknown_text' => 'We konden je abonnement nu niet controleren. Probeer het over een paar minuten opnieuw.',
         'plan_confirmed' => 'Bedankt! Je abonnement is actief.',
+        'plan_unavailable_title' => 'Abonnementsgegevens konden niet worden geladen',
+        'plan_unavailable_text' => 'Je kunt je abonnement nog steeds kiezen, upgraden of downgraden op de abonnementspagina van Shopify.',
 
         // SEO audit (shared: home, content optimizer, SEO audit page)
         'seo_score' => 'SEO-score',

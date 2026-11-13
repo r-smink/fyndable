@@ -12,6 +12,11 @@
         'feature' => $feature,
         'lang' => $lang,
         'navQuery' => $navQuery,
+        // Shopify plan page, without a server round trip: the Plan page must offer plan
+        // changes even when the API is unavailable (App Store review 1.2.3).
+        'pricingUrl' => $shopDomain
+            ? 'https://admin.shopify.com/store/'.rawurlencode(str_replace('.myshopify.com', '', $shopDomain)).'/charges/'.rawurlencode((string) config('shopify.billing.app_handle')).'/pricing_plans'
+            : '',
         'tabFeatures' => config('tiers.tabs', []),
         'i18n' => array_merge(__('app.js'), is_array($pageI18n) ? $pageI18n : []),
     ];

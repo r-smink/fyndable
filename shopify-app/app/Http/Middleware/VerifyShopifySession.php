@@ -8,6 +8,7 @@ use App\Services\ShopifyTokenService;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * VerifyShopifySession
@@ -64,20 +65,22 @@ class VerifyShopifySession
             ]);
         }
 
-        if (! $shop->is_installed && ! $isNewInstall) {
-            return response()->json(['error' => 'shop_not_installed'], 403);
-        }
-
-        // A valid session token on an uninstalled shop means the merchant
-        // reinstalled — clear the flag once the exchange succeeds.
-        $needsToken = ! $shop->hasUsableToken() || $shop->is_uninstalled;
+        // Shopify only issues session tokens for an app that is installed. A verified token
+        // for a shop we marked uninstalled (app/uninstalled webhook) therefore means the
+        // merchant reinstalled: mint a new token and mark the shop installed again.
+        // (Before, the shop was rejected with "shop_not_installed" before this point, so
+        // every reinstall got stuck: App Store review 1.2.2 / 1.2.3 / 2.1.1.)
+        $isReinstall = ! $isNewInstall && (! $shop->is_installed || $shop->is_uninstalled);
+        $needsToken = $isNewInstall || $isReinstall || ! $shop->hasUsableToken();
         if ($needsToken) {
             if (! app(ShopifyTokenService::class)->exchange($shop, $token)) {
                 return response()->json(['error' => 'token_exchange_failed'], 403);
             }
-            if ($shop->is_uninstalled) {
+            if ($isReinstall) {
+                $shop->is_installed = true;
                 $shop->is_uninstalled = false;
                 $shop->save();
+                Log::info('Shop reinstalled', ['shop' => $shop->shop_domain]);
             }
         }
 
