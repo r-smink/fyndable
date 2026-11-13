@@ -696,7 +696,7 @@ class LicenseAdmin
                         ],
                         'max_sites' => [
                             'starter' => 1, 'early_adopters' => 1, 'trial' => 3,
-                            'professional' => 1, 'business' => 15, 'agency' => 50, 'dev' => 100,
+                            'professional' => 1, 'business' => 3, 'agency' => 5, 'dev' => 100,
                         ],
                     ]); ?>;
                     
@@ -722,8 +722,8 @@ class LicenseAdmin
             $tierRef = [
                 'starter' => __('1 site · Core SEO', 'sseo-ai-saas'),
                 'professional' => __('1 site · AI content + rank tracking', 'sseo-ai-saas'),
-                'business' => __('15 sites · Local SERP + 5x5 grid', 'sseo-ai-saas'),
-                'agency' => __('50 sites · White-label + sub-licenses', 'sseo-ai-saas'),
+                'business' => __('3 sites · Local SERP + 5x5 grid', 'sseo-ai-saas'),
+                'agency' => __('5 sites · White-label + sub-licenses', 'sseo-ai-saas'),
             ];
             ?>
             <div class="fyn-card">
