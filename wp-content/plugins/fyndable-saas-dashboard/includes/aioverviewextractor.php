@@ -188,7 +188,31 @@ class AiOverviewExtractor
             return $items;
         }
 
-        return $this->parseDataForSeoSerp((array)$items, $keyword);
+        $result = $this->parseDataForSeoSerp((array)$items, $keyword);
+
+        // Google does not show the AI Overview on every request for the same query (it varies per
+        // request, and more so for anonymous crawlers than for a logged-in user). One extra request
+        // when it is missing, so a keyword is not reported as "no AI overview" on a single miss.
+        if (!$result['has_ai_overview']) {
+            $retry = $this->dataForSeoClient->serpOrganicLiveAdvanced(
+                $keyword,
+                (int)$locale['location_code'],
+                (string)$locale['language_code'],
+                '',
+                ['load_async_ai_overview' => true, 'depth' => 10]
+            );
+            if (!is_wp_error($retry)) {
+                $second = $this->parseDataForSeoSerp((array)$retry, $keyword);
+                if ($second['has_ai_overview']) {
+                    if (!$second['organic_top']) {
+                        $second['organic_top'] = $result['organic_top'];
+                    }
+                    $result = $second;
+                }
+            }
+        }
+
+        return $result;
     }
 
     /**
