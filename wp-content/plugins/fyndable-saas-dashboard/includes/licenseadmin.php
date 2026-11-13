@@ -696,7 +696,7 @@ class LicenseAdmin
                         ],
                         'max_sites' => [
                             'starter' => 1, 'early_adopters' => 1, 'trial' => 3,
-                            'professional' => 5, 'business' => 15, 'agency' => 50, 'dev' => 100,
+                            'professional' => 1, 'business' => 15, 'agency' => 50, 'dev' => 100,
                         ],
                     ]); ?>;
                     
@@ -721,7 +721,7 @@ class LicenseAdmin
             // the same helpers the form's tier defaults use.
             $tierRef = [
                 'starter' => __('1 site · Core SEO', 'sseo-ai-saas'),
-                'professional' => __('5 sites · AI content + rank tracking', 'sseo-ai-saas'),
+                'professional' => __('1 site · AI content + rank tracking', 'sseo-ai-saas'),
                 'business' => __('15 sites · Local SERP + 5x5 grid', 'sseo-ai-saas'),
                 'agency' => __('50 sites · White-label + sub-licenses', 'sseo-ai-saas'),
             ];
