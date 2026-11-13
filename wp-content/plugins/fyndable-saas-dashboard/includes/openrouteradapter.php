@@ -98,8 +98,84 @@ class OpenRouterAdapter
             );
         }
 
-        $statusCode = wp_remote_retrieve_response_code($response);
-        $body = json_decode(wp_remote_retrieve_body($response), true);
+        return $this->interpretResponse(
+            (int) wp_remote_retrieve_response_code($response),
+            json_decode(wp_remote_retrieve_body($response), true),
+            $model
+        );
+    }
+
+    /**
+     * Send several chat completion requests in parallel (one HTTP round trip).
+     *
+     * @param array<string|int, array{messages: array, model: string}> $jobs
+     * @return array<string|int, array|\WP_Error> Same keys as $jobs, same result shape as chat().
+     */
+    public function chatMany(array $jobs, int $maxTokens, float $temperature, int $timeout = 300): array
+    {
+        $apiKey = $this->getApiKey();
+        if (empty($apiKey)) {
+            $error = new \WP_Error(
+                'openrouter_not_configured',
+                __('OpenRouter API key is not configured. Add it in SaaS Settings.', 'sseo-ai-saas')
+            );
+            return array_map(static fn() => $error, $jobs);
+        }
+
+        $headers = [
+            'Authorization' => 'Bearer ' . $apiKey,
+            'Content-Type'  => 'application/json',
+            'HTTP-Referer'  => get_site_url(),
+            'X-Title'       => substr((string) get_bloginfo('name'), 0, 100),
+        ];
+        $requests = [];
+        foreach ($jobs as $key => $job) {
+            $requests[$key] = [
+                'url'     => $this->apiUrl,
+                'type'    => 'POST',
+                'headers' => $headers,
+                'data'    => (string) wp_json_encode([
+                    'model'       => $job['model'],
+                    'messages'    => $job['messages'],
+                    'temperature' => $temperature,
+                    'max_tokens'  => $maxTokens,
+                ]),
+            ];
+        }
+
+        $requestsClass = class_exists('\WpOrg\Requests\Requests') ? '\WpOrg\Requests\Requests' : '\Requests';
+        $options = ['timeout' => $timeout, 'connect_timeout' => 15];
+        if (defined('ABSPATH') && defined('WPINC') && is_readable(ABSPATH . WPINC . '/certificates/ca-bundle.crt')) {
+            $options['verify'] = ABSPATH . WPINC . '/certificates/ca-bundle.crt';
+        }
+        try {
+            $responses = $requestsClass::request_multiple($requests, $options);
+        } catch (\Throwable $e) {
+            $responses = array_map(static fn() => $e, $requests);
+        }
+
+        $results = [];
+        foreach ($jobs as $key => $job) {
+            $response = $responses[$key] ?? null;
+            if ($response instanceof \Throwable || !is_object($response) || !isset($response->status_code)) {
+                $message = $response instanceof \Throwable ? $response->getMessage() : __('No response from OpenRouter', 'sseo-ai-saas');
+                $isTimeout = stripos($message, 'timed out') !== false || stripos($message, 'timeout') !== false || stripos($message, 'cURL error 28') !== false;
+                $results[$key] = $isTimeout
+                    ? new \WP_Error('ai_timeout', sprintf(__('OpenRouter request timed out after %ds: %s', 'sseo-ai-saas'), $timeout, $message))
+                    : new \WP_Error('openrouter_request_failed', sprintf(__('OpenRouter request failed: %s', 'sseo-ai-saas'), $message));
+                continue;
+            }
+            $results[$key] = $this->interpretResponse((int) $response->status_code, json_decode((string) $response->body, true), $job['model']);
+        }
+        return $results;
+    }
+
+    /**
+     * Turn an OpenRouter HTTP response into the chat() result shape or a WP_Error.
+     */
+    private function interpretResponse(int $statusCode, $body, string $model): array|\WP_Error
+    {
+        $body = is_array($body) ? $body : [];
 
         if ($statusCode !== 200) {
             $errorMsg = $body['error']['message'] ?? $body['message'] ?? __('Unknown OpenRouter error', 'sseo-ai-saas');

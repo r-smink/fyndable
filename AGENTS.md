@@ -57,7 +57,7 @@ When enabled, the GEO scan runs the same page through multiple AI models sequent
 - `sseo_ai_saas_geo_website_multi_enabled` (bool) — also for website scans (requires admin multi-model to be on)
 
 **Architecture:**
-- `GeoScanner::analyzeWithMultipleModels()` — loops sequentially over selected models, calls `analyzeWithLlm()` per model with a `$modelOverride`
+- `GeoScanner::analyzeWithMultipleModels()` — builds one prompt per model (`buildAnalysisRequest()`) and sends them in parallel via `ProviderRouter::routeRequestsParallel()` (SaaS 1.11.5; was sequential); each answer goes through `finishAnalysis()` (JSON parse + one retry)
 - `GeoScanner::getModelSpecificPromptAddition(model, language)` — per model-family (openai/google/anthropic) appends a focused evaluation section: ChatGPT → Bing/conversational, Gemini → Knowledge Graph/organic top-10, Claude → entity clarity/conservative name-dropping
 - `GeoScanner::mergeMultiModelResults()` — averages scores/breakdown, merges+deduplicates findings/recommendations/strengths/weaknesses (60% word-overlap threshold), sums usage/cost
 - `GeoScanner::detectModelFamily(model)` — maps model ID to family (openai/google/anthropic/other)
@@ -675,3 +675,9 @@ Nieuwe functies volgen `shopify-tier-indeling.xlsx` (rijen 28-31; WordPress-tier
 
 - `TruSEOScore` schrijft `_sseo_ai_title` nu als `<title>` (`pre_get_document_title`, prio 15) en `_sseo_ai_description` als `<meta name="description">` (wp_head prio 1) op singular-views en de blogpagina; doet niets als Yoast/Rank Math/AIOSEO/SEOPress actief is. Voorheen werden deze velden alleen voor OG/schema gebruikt.
 - `SchemaMarkup::saveSchemaMeta()`: `wp_unslash()` vóór JSON-validatie (en `wp_slash()` bij opslaan); voorheen werd elk custom schema met `"` stil weggegooid. Leeg veld verwijdert de meta.
+
+## SaaS 1.11.5: instellingen niet meer gewist bij opslaan (2026-11-13)
+
+- De optiegroep `ai_seo_saas_settings` wordt gedeeld door de Settings-pagina, de AI Models-pagina en opties met een eigen handler (GEO multi-model, update server). `options.php` zet elke geregistreerde optie van de groep die niet in het formulier staat op null, dus opslaan op Settings zette o.a. "Multi-model GEO Scan" uit en wiste de AI Models-routing (en andersom).
+- `SaaSSettings::keepUnpostedOptions()` (`pre_update_option`) houdt bij een `options.php`-submit van deze groep de opgeslagen waarde voor opties die niet gepost zijn. Gevolg: checkboxes op deze formulieren hebben een hidden `0`-input nodig om uit te kunnen (SMTP enabled/auth en GEO platformtests hebben die).
+- **Multi-model GEO scan parallel (1.11.5):** de modellen draaiden na elkaar (elk tot 6000 output-tokens), dus 3 modellen = ~3x zo lang. Nu gaan de eerste pogingen van alle OpenRouter-modellen tegelijk de deur uit (`OpenRouterAdapter::chatMany()`, `Requests::request_multiple`, zelfde 300 s timeout); de scan duurt zo lang als het traagste model. Een model waarvan de eerste poging faalt (geen timeout) of dat niet via OpenRouter loopt, gaat daarna door de gewone `routeRequest()` met fallbackketen. Een JSON-herkansing gebeurt per model na de batch (sequentieel).

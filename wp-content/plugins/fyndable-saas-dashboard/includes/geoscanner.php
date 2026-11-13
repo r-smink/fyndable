@@ -17,6 +17,9 @@ class GeoScanner
 {
     private HtmlFetcher $htmlFetcher;
     private AiOverviewExtractor $aiExtractor;
+    /** Max output tokens for one GEO analysis answer. */
+    private const ANALYSIS_MAX_TOKENS = 6000;
+
     private ProviderRouter $providerRouter;
     private SaaSSettings $settings;
     private GeoScanRepository $repository;
@@ -240,6 +243,27 @@ class GeoScanner
         array $platformVisibility = [],
         array $competitiveBenchmark = []
     ): array|\WP_Error {
+        $request = $this->buildAnalysisRequest($pageText, $keywords, $keywordResults, $language, $source, $modelOverride, $platformVisibility, $competitiveBenchmark);
+        $result = $this->providerRouter->routeRequest($request['messages'], $request['model'] ?: null, 'geo_readiness', self::ANALYSIS_MAX_TOKENS, 0.2);
+
+        return $this->finishAnalysis($request['messages'], $request['model'], $result, $language);
+    }
+
+    /**
+     * Build the GEO analysis prompt for one model.
+     *
+     * @return array{messages: array, model: string}
+     */
+    private function buildAnalysisRequest(
+        string $pageText,
+        array $keywords,
+        array $keywordResults,
+        string $language,
+        string $source,
+        ?string $modelOverride,
+        array $platformVisibility,
+        array $competitiveBenchmark
+    ): array {
         $truncated = mb_substr($pageText, 0, 12000);
 
         $context = [];
@@ -372,14 +396,22 @@ AI Overview context:
 " . implode("\n", $context);
         }
 
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt],
-            ['role' => 'user', 'content' => $prompt],
+        return [
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+            'model' => (string) $model,
         ];
+    }
 
-        $maxTokens = 6000;
-
-        $result = $this->providerRouter->routeRequest($messages, $model ?: null, 'geo_readiness', $maxTokens, 0.2);
+    /**
+     * Parse a model answer into the analysis array; asks the same model once more
+     * when the answer is not valid JSON.
+     */
+    private function finishAnalysis(array $messages, string $model, array|\WP_Error $result, string $language): array|\WP_Error
+    {
+        $maxTokens = self::ANALYSIS_MAX_TOKENS;
 
         if (is_wp_error($result)) {
             return $result;
@@ -417,7 +449,7 @@ AI Overview context:
     }
 
     /**
-     * Run LLM analysis across multiple models sequentially and merge the results.
+     * Run the LLM analysis on multiple models in parallel and merge the results.
      *
      * @param callable $progress Progress callback fn(int $percent, string $label).
      */
@@ -435,17 +467,25 @@ AI Overview context:
         $modelResults = [];
         $modelCount = count($models);
 
-        foreach ($models as $index => $model) {
-            $modelLabel = $this->getModelDisplayName($model);
-            $pct = 75 + (int) round(($index / $modelCount) * 15);
-            $progress($pct, sprintf(
-                __('AI-analyse: %s (%d/%d)…', 'sseo-ai-saas'),
-                $modelLabel,
-                $index + 1,
-                $modelCount
-            ));
+        $progress(75, sprintf(
+            __('AI-analyse: %d modellen tegelijk (%s)…', 'sseo-ai-saas'),
+            $modelCount,
+            implode(', ', array_map([$this, 'getModelDisplayName'], $models))
+        ));
 
-            $result = $this->analyzeWithLlm($pageText, $keywords, $keywordResults, $language, $source, $model, $platformVisibility, $competitiveBenchmark);
+        // All models run at the same time: the scan takes as long as the slowest
+        // model instead of the sum of all models.
+        $requests = [];
+        foreach (array_values($models) as $index => $model) {
+            $requests[$index] = $this->buildAnalysisRequest($pageText, $keywords, $keywordResults, $language, $source, $model, $platformVisibility, $competitiveBenchmark);
+        }
+        $answers = $this->providerRouter->routeRequestsParallel($requests, 'geo_readiness', self::ANALYSIS_MAX_TOKENS, 0.2);
+
+        $progress(88, __('AI-analyses samenvoegen…', 'sseo-ai-saas'));
+
+        foreach ($requests as $index => $request) {
+            $model = $request['model'];
+            $result = $this->finishAnalysis($request['messages'], $model, $answers[$index] ?? new \WP_Error('no_response', 'No response'), $language);
 
             if (is_wp_error($result)) {
                 // Log failure but continue with remaining models (graceful degradation).

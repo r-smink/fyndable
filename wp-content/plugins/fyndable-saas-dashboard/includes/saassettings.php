@@ -79,10 +79,35 @@ class SaaSSettings
     }
     
     /**
+     * options.php writes every option registered in the submitted group and sets the
+     * ones missing from the form to null. The group ai_seo_saas_settings is shared by
+     * the Settings page, the AI Models page and options saved by their own handlers
+     * (GEO multi-model, update server), so saving one page wiped the others, e.g. the
+     * GEO multi-model toggle after every Settings save. Keep the stored value for any
+     * option of this group that the submitted form did not contain. Checkboxes on
+     * these forms therefore need a hidden "0" input to be switched off.
+     */
+    public function keepUnpostedOptions($value, $option, $oldValue)
+    {
+        if (($GLOBALS['pagenow'] ?? '') !== 'options.php'
+            || ($_POST['option_page'] ?? '') !== 'ai_seo_saas_settings'
+            || array_key_exists($option, $_POST)) {
+            return $value;
+        }
+        $registered = get_registered_settings();
+        if (($registered[$option]['group'] ?? '') !== 'ai_seo_saas_settings') {
+            return $value;
+        }
+        return $oldValue;
+    }
+
+    /**
      * Register settings
      */
     public function registerSettings(): void
     {
+        add_filter('pre_update_option', [$this, 'keepUnpostedOptions'], 10, 3);
+
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openai_api_key');
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_openai_model', ['default' => 'gpt-4']);
         register_setting('ai_seo_saas_settings', 'ai_seo_saas_serp_api_key');
@@ -1047,6 +1072,7 @@ class SaaSSettings
                         <tr>
                             <th scope="row"><label for="smtp_enabled"><?php esc_html_e('Enable SMTP', 'sseo-ai-saas'); ?></label></th>
                             <td>
+                                <input type="hidden" name="sseo_ai_saas_smtp_enabled" value="0">
                                 <input type="checkbox" name="sseo_ai_saas_smtp_enabled" id="smtp_enabled" value="1" <?php checked(get_option('sseo_ai_saas_smtp_enabled', false)); ?>>
                                 <p class="description"><?php esc_html_e('Override the default WordPress mailer with SMTP.', 'sseo-ai-saas'); ?></p>
                             </td>
@@ -1077,6 +1103,7 @@ class SaaSSettings
                         <tr>
                             <th scope="row"><label for="smtp_auth"><?php esc_html_e('SMTP Authentication', 'sseo-ai-saas'); ?></label></th>
                             <td>
+                                <input type="hidden" name="sseo_ai_saas_smtp_auth" value="0">
                                 <input type="checkbox" name="sseo_ai_saas_smtp_auth" id="smtp_auth" value="1" <?php checked(get_option('sseo_ai_saas_smtp_auth', true)); ?>>
                             </td>
                         </tr>

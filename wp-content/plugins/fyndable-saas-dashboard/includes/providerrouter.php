@@ -308,6 +308,61 @@ class ProviderRouter
     }
 
     /**
+     * Run several requests with explicit models at the same time.
+     *
+     * The first attempt for every OpenRouter model goes out in one parallel batch.
+     * A request whose first attempt fails (other than a timeout), or whose model is
+     * not served by OpenRouter, then runs through routeRequest() with its normal
+     * fallback chain. Result shape per key is the same as routeRequest().
+     *
+     * @param array<string|int, array{messages: array, model: string}> $jobs
+     * @return array<string|int, array|\WP_Error>
+     */
+    public function routeRequestsParallel(array $jobs, string $useCase, int $maxTokens, float $temperature, int $timeout = 300): array
+    {
+        $parallel = [];
+        if ($this->openRouter->isConfigured()) {
+            foreach ($jobs as $key => $job) {
+                if ($job['model'] !== '' && $this->getProviderForModel($job['model']) === 'openrouter') {
+                    $parallel[$key] = $job;
+                }
+            }
+        }
+
+        $first = count($parallel) > 1
+            ? $this->openRouter->chatMany($parallel, $maxTokens, $temperature, $timeout)
+            : [];
+
+        $results = [];
+        foreach ($jobs as $key => $job) {
+            $result = $first[$key] ?? null;
+            if (is_array($result)) {
+                $inputTokens = $result['usage']['prompt_tokens'] ?? 0;
+                $outputTokens = $result['usage']['completion_tokens'] ?? 0;
+                $results[$key] = [
+                    'content'  => $result['content'] ?? '',
+                    'model'    => $result['model'] ?? $job['model'],
+                    'provider' => 'openrouter',
+                    'usage'    => [
+                        'prompt_tokens'     => $inputTokens,
+                        'completion_tokens' => $outputTokens,
+                        'total_tokens'      => $inputTokens + $outputTokens,
+                        'cost'              => $this->calculateCost($job['model'], $inputTokens, $outputTokens),
+                    ],
+                    'fallback_used' => false,
+                ];
+                continue;
+            }
+            if ($result instanceof \WP_Error && $result->get_error_code() === 'ai_timeout') {
+                $results[$key] = $result; // a fallback model would be just as slow
+                continue;
+            }
+            $results[$key] = $this->routeRequest($job['messages'], $job['model'] ?: null, $useCase, $maxTokens, $temperature, $timeout);
+        }
+        return $results;
+    }
+
+    /**
      * Execute a chat request against the requested provider.
      */
     private function executeProviderChat(
