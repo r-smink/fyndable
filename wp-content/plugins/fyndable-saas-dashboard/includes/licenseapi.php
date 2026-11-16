@@ -844,6 +844,16 @@ class LicenseAPI
             ], 400);
         }
 
+        // Free trials only when enabled (Settings › Checkout). WordPress customers have no
+        // free trial and no client calls this route; Shopify trials go via /shopify/subscription.
+        if (empty(get_option('sseo_ai_saas_trial_enabled', '1'))) {
+            return new \WP_REST_Response([
+                'success' => false,
+                'error' => 'trial_disabled',
+                'message' => 'Trial signups are currently disabled.',
+            ], 400);
+        }
+
         // SECURITY: the license key is delivered only by email (welcome email
         // via sseo_ai_license_activated), never in this response. Returning it
         // let anyone create a trial with a fake address and use the
