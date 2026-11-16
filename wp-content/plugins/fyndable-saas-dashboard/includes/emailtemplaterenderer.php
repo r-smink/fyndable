@@ -196,44 +196,134 @@ class EmailTemplateRenderer
         $siteName = esc_html($context['site_name'] ?? get_bloginfo('name'));
         $footerText = esc_html($context['footer_text'] ?? '');
 
-        $headerGradient = "background:linear-gradient(135deg, {$primary} 0%, {$secondary} 100%);";
+        // Huisstijl van de portal: donkere kop met merkverloop-balk, witte kaart op lichtgrijs, Outfit.
+        // Geen aanhalingstekens: de string staat in style='...' en style="...".
+        $font = 'font-family:Outfit,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;';
+        $bar = "<div style='height:4px;line-height:4px;font-size:0;background-color:{$secondary};background-image:linear-gradient(90deg,{$secondary},{$primary});'>&nbsp;</div>";
+        $darkHeader = 'background-color:#1f1a33;background-image:linear-gradient(135deg,#2a1533 0%,#132a38 100%);';
 
         if ($layout === 'minimal') {
-            $header = "<div style='padding:24px 40px;text-align:center;background:#fff;border-bottom:1px solid #e5e7eb;'>";
-            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:40px;'>" : "<h1 style='margin:0;color:#111827;font-size:20px;'>{$siteName}</h1>";
-            $header .= '</div>';
+            $header = "<div style='padding:22px 40px;background:#ffffff;border-bottom:1px solid #efeef4;'>";
+            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:34px;display:block;'>" : "<p style='margin:0;{$font}color:#1a1430;font-size:18px;font-weight:700;'>{$siteName}</p>";
+            $header .= '</div>' . $bar;
         } elseif ($layout === 'announcement') {
-            $header = "<div style='{$headerGradient}padding:48px 40px;text-align:center;'>";
-            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:48px;margin-bottom:16px;'>" : '';
-            $header .= "<h1 style='color:#fff;margin:0;font-size:28px;font-weight:700;'>{$siteName}</h1>";
-            $header .= '</div>';
+            $header = "<div style='{$darkHeader}padding:44px 40px;text-align:center;'>";
+            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:44px;margin:0 auto 16px;display:block;'>" : '';
+            $header .= "<h1 style='{$font}color:#ffffff;margin:0;font-size:26px;font-weight:700;letter-spacing:-0.01em;'>{$siteName}</h1>";
+            $header .= '</div>' . $bar;
         } else {
-            $header = "<div style='{$headerGradient}padding:30px 40px;text-align:center;'>";
-            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:50px;margin-bottom:10px;'>" : '';
-            $header .= "<h1 style='color:#fff;margin:0;font-size:24px;font-weight:700;'>{$siteName}</h1>";
-            $header .= '</div>';
+            $header = "<div style='{$darkHeader}padding:26px 40px;'>";
+            $header .= $logo ? "<img src='{$logo}' alt='{$siteName}' style='max-height:38px;display:block;'>" : "<p style='{$font}color:#ffffff;margin:0;font-size:20px;font-weight:700;letter-spacing:-0.01em;'>{$siteName}</p>";
+            $header .= '</div>' . $bar;
         }
 
-        $footerExtra = $footerText ? "<p style='margin:0 0 8px 0;color:#6b7280;'>{$footerText}</p>" : '';
+        $footerExtra = $footerText ? "<p style='margin:0 0 10px 0;color:#746e82;font-size:13px;'>{$footerText}</p>" : '';
 
         // Build company details block for the footer.
         $companyBlock = $this->buildCompanyFooterBlock($context);
 
-        $html = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'></head>";
-        $html .= "<body style='margin:0;padding:0;font-family:Outfit,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#f3f4f6;'>";
-        $html .= "<div style='max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);'>";
+        $html = "<!DOCTYPE html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'><meta name='color-scheme' content='light'></head>";
+        $html .= "<body style='margin:0;padding:0;background:#f4f5f8;{$font}'>";
+        $html .= "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='background:#f4f5f8;'><tr><td style='padding:32px 12px;'>";
+        $html .= "<div style='max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #ececf1;border-radius:16px;overflow:hidden;box-shadow:0 10px 24px -8px rgba(20,14,30,0.14);'>";
         $html .= $header;
-        $html .= '<div style="padding:30px 40px;">' . $content . '</div>';
-        $html .= "<div style='padding:20px 40px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;'>";
+        $html .= "<div style='padding:36px 40px 32px;{$font}font-size:15px;line-height:1.65;color:#413b52;'>" . $this->styleContent($content, $primary, $secondary, $button, $font) . '</div>';
+        $html .= "<div style='padding:22px 40px;background:#f7f6fa;border-top:1px solid #efeef4;text-align:center;{$font}'>";
         $html .= $footerExtra;
         $html .= $companyBlock;
-        $html .= "<p style='margin:0;font-size:13px;color:#9ca3af;'>" . esc_html($siteName) . ' — ' . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . '</p>';
-        $html .= '</div></div></body></html>';
+        $html .= "<p style='margin:0;font-size:12px;color:#a39dae;'>" . esc_html($siteName) . ' — ' . __('This is an automated email, please do not reply.', 'sseo-ai-saas') . '</p>';
+        $html .= '</div></div></td></tr></table></body></html>';
 
         // Replace color variables inside the generated HTML, including inside inline styles
         $html = $this->replacePlaceholders($html, $context, false);
 
         return $html;
+    }
+
+    /**
+     * Inline styles for the template body. The stored templates use classes (button, license-box, ...) that
+     * mail clients would ignore without a stylesheet; they get the portal look here. A style attribute that is
+     * already on the element wins (e.g. the red button in payment_failed).
+     */
+    private function styleContent(string $html, string $primary, string $secondary, string $button, string $font): string
+    {
+        $classes = [
+            'button' => "display:inline-block;padding:13px 26px;margin:8px 0 18px;border-radius:10px;background-color:{$button};background-image:linear-gradient(135deg,{$secondary},{$primary});color:#ffffff;{$font}font-size:14.5px;font-weight:600;line-height:1.2;text-decoration:none;",
+            'license-box' => "margin:22px 0;padding:16px 20px;background:#f7f6fa;border:1px solid #edecf2;border-left:4px solid {$secondary};border-radius:12px;",
+            'success-box' => 'margin:22px 0;padding:18px 20px;background:#ecfdf5;border:1px solid #d1fae5;border-radius:12px;text-align:center;',
+            'label' => 'margin:0 0 6px;font-size:11.5px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:#746e82;',
+            'value' => 'margin:0;font-family:SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;font-weight:600;color:#1a1430;word-break:break-all;',
+            'amount' => "margin:0;{$font}font-size:28px;font-weight:700;color:#1a1430;letter-spacing:-0.01em;",
+            'status' => 'margin:4px 0 0;font-size:13px;font-weight:600;color:#047857;',
+            'details' => 'width:100%;margin:8px 0 22px;border-collapse:collapse;font-size:14px;',
+            'help' => 'margin:6px 0 0;font-size:13px;color:#746e82;',
+        ];
+        $tags = [
+            'h1' => "margin:0 0 14px;{$font}font-size:24px;font-weight:700;line-height:1.3;color:#1a1430;letter-spacing:-0.01em;",
+            'h2' => "margin:0 0 14px;{$font}font-size:22px;font-weight:700;line-height:1.3;color:#1a1430;letter-spacing:-0.01em;",
+            'h3' => "margin:0 0 10px;{$font}font-size:17px;font-weight:700;line-height:1.35;color:#1a1430;",
+            'p' => 'margin:0 0 14px;',
+            'a' => "color:{$secondary};font-weight:600;",
+            'td' => 'padding:9px 0;border-bottom:1px solid #efeef4;color:#413b52;',
+            'hr' => 'border:0;border-top:1px solid #efeef4;margin:24px 0;',
+            'ul' => 'margin:0 0 14px;padding-left:20px;',
+            'ol' => 'margin:0 0 14px;padding-left:20px;',
+        ];
+
+        return (string) preg_replace_callback('/<(h1|h2|h3|p|a|td|hr|ul|ol|div|table|span)\b([^>]*)>/i', function ($m) use ($classes, $tags) {
+            $tag = strtolower($m[1]);
+            $attrs = $m[2];
+            $base = '';
+            if (preg_match('/\sclass\s*=\s*([\'"])(.*?)\1/i', $attrs, $c)) {
+                foreach (preg_split('/\s+/', trim($c[2])) as $class) {
+                    $base .= $classes[$class] ?? '';
+                }
+            }
+            if ($base === '') {
+                // Elementen die al eigen opmaak hebben (o.a. uit de blokeditor) blijven zoals ze zijn.
+                if (preg_match('/\sstyle\s*=/i', $attrs)) {
+                    return $m[0];
+                }
+                $base = $tags[$tag] ?? '';
+            }
+            if ($base === '') {
+                return $m[0];
+            }
+            $own = '';
+            if (preg_match('/\sstyle\s*=\s*([\'"])(.*?)\1/i', $attrs, $s)) {
+                $own = $s[2];
+                $attrs = str_replace($s[0], '', $attrs);
+            }
+            $merged = $this->mergeStyles($base, $own);
+
+            return '<' . $m[1] . $attrs . ' style="' . str_replace('"', "'", $merged) . '">';
+        }, $html);
+    }
+
+    /** Merge two inline style strings; properties from $own win, and an own "background" replaces the base background. */
+    private function mergeStyles(string $base, string $own): string
+    {
+        $parse = function (string $style): array {
+            $out = [];
+            foreach (explode(';', $style) as $rule) {
+                $parts = explode(':', $rule, 2);
+                if (count($parts) === 2 && trim($parts[0]) !== '') {
+                    $out[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+            }
+            return $out;
+        };
+        $rules = $parse($base);
+        $mine = $parse($own);
+        if (isset($mine['background'])) {
+            unset($rules['background-color'], $rules['background-image']);
+        }
+        $rules = array_merge($rules, $mine);
+        $css = '';
+        foreach ($rules as $property => $value) {
+            $css .= $property . ':' . $value . ';';
+        }
+        return $css;
     }
 
     /**
