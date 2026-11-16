@@ -93,7 +93,7 @@ class EmailTemplateRenderer
             'secondary_color' => get_option('sseo_ai_saas_email_brand_secondary_color', '#8f39ac'),
             'button_color' => get_option('sseo_ai_saas_email_brand_button_color', ''),
             'footer_text' => get_option('sseo_ai_saas_email_brand_footer_text', ''),
-            'support_email' => get_option('ai_seo_saas_support_email', get_option('admin_email')),
+            'support_email' => get_option('ai_seo_saas_support_email', '') ?: get_option('admin_email'),
             'support_url' => '',
         ];
 

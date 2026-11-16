@@ -32,6 +32,7 @@ class ExternalIntegrations
 
         // AJAX handler for saving Google config
         add_action('wp_ajax_sseo_ai_save_google_config', [$this, 'ajaxSaveGoogleConfig']);
+        add_action('wp_ajax_sseo_ai_semrush_test', [$this, 'ajaxTestSemrush']);
 
         // Google Tag Manager front-end snippets
         add_action('wp_head', [$this, 'renderGtmHeadScript'], 1);
@@ -123,8 +124,18 @@ class ExternalIntegrations
         // Ahrefs
         register_setting('sseo_ai_integrations', 'sseo_ai_ahrefs_api_key');
 
-        // Semrush
-        register_setting('sseo_ai_integrations', 'sseo_ai_semrush_api_key');
+        // Semrush (customer's own key, stored encrypted)
+        register_setting('sseo_ai_integrations', SemrushClient::KEY_OPTION, [
+            'sanitize_callback' => [SemrushClient::class, 'sanitizeKeyOption'],
+        ]);
+        register_setting('sseo_ai_integrations', SemrushClient::DATABASE_OPTION, [
+            'default' => '',
+            'sanitize_callback' => fn($value) => isset(SemrushClient::DATABASES[$value]) ? $value : '',
+        ]);
+        register_setting('sseo_ai_integrations', SemrushClient::BUDGET_OPTION, [
+            'default' => 0,
+            'sanitize_callback' => fn($value) => max(0, (int) $value),
+        ]);
 
         // DataForSEO
         register_setting('sseo_ai_integrations', 'sseo_ai_dataforseo_api_key');
@@ -211,7 +222,10 @@ class ExternalIntegrations
         $ahrefsApiKey = get_option('sseo_ai_ahrefs_api_key', '');
 
         // Semrush
-        $semrushApiKey = get_option('sseo_ai_semrush_api_key', '');
+        $semrushApiKey = get_option(SemrushClient::KEY_OPTION, '');
+        $semrushDatabase = (string) get_option(SemrushClient::DATABASE_OPTION, '');
+        $semrushBudget = (int) get_option(SemrushClient::BUDGET_OPTION, 0);
+        $semrushUsed = SemrushClient::getUnitsUsedThisMonth();
 
         // DataForSEO
         $dataforseoApiKey = get_option('sseo_ai_dataforseo_api_key', '');
@@ -738,8 +752,32 @@ class ExternalIntegrations
                                     <tr>
                                         <th scope="row"><label for="semrush_api_key"><?php esc_html_e('Semrush API Key', 'ai-seo-client'); ?></label></th>
                                         <td>
-                                            <input type="password" id="semrush_api_key" name="sseo_ai_semrush_api_key" value="<?php echo esc_attr($semrushApiKey); ?>" class="regular-text">
-                                            <p class="description"><?php esc_html_e('Get your API key from Semrush > Dashboard > API.', 'ai-seo-client'); ?> <a href="https://www.semrush.com/api/" target="_blank"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a></p>
+                                            <input type="password" id="semrush_api_key" name="sseo_ai_semrush_api_key" value="<?php echo esc_attr($semrushApiKey); ?>" class="regular-text" autocomplete="off">
+                                            <button type="button" class="fyn-btn fyn-btn-outline" id="sseo-semrush-test" style="margin-left:6px;"><?php esc_html_e('Test connection', 'ai-seo-client'); ?></button>
+                                            <span id="sseo-semrush-test-result" style="margin-left:8px;"></span>
+                                            <p class="description"><?php esc_html_e('Find your API key in Semrush under Subscription info > API units. API access requires a Semrush Business plan with API units. The key is stored encrypted; save the settings before testing a new key.', 'ai-seo-client'); ?> <a href="https://developer.semrush.com/api/basics/get-started/" target="_blank" rel="noopener"><?php esc_html_e('Learn more', 'ai-seo-client'); ?></a></p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row"><label for="semrush_database"><?php esc_html_e('Semrush database', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <select id="semrush_database" name="sseo_ai_semrush_database">
+                                                <option value="" <?php selected($semrushDatabase, ''); ?>><?php echo esc_html(sprintf(__('Automatic (site language: %s)', 'ai-seo-client'), SemrushClient::defaultDatabase())); ?></option>
+                                                <?php foreach (SemrushClient::DATABASES as $code => $label) : ?>
+                                                    <option value="<?php echo esc_attr($code); ?>" <?php selected($semrushDatabase, $code); ?>><?php echo esc_html($label . ' (' . $code . ')'); ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <p class="description"><?php esc_html_e('Country database used for search volumes, rankings and traffic.', 'ai-seo-client'); ?></p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row"><label for="semrush_unit_budget"><?php esc_html_e('Monthly API unit budget', 'ai-seo-client'); ?></label></th>
+                                        <td>
+                                            <input type="number" id="semrush_unit_budget" name="sseo_ai_semrush_unit_budget" value="<?php echo esc_attr((string) $semrushBudget); ?>" min="0" step="1000" style="width:120px;">
+                                            <p class="description">
+                                                <?php esc_html_e('Maximum Semrush API units this site may use per calendar month (0 = no limit). Results are cached for 24 hours.', 'ai-seo-client'); ?>
+                                                <?php echo esc_html(sprintf(__('Used this month (estimate): %s units.', 'ai-seo-client'), number_format_i18n($semrushUsed))); ?>
+                                            </p>
                                         </td>
                                     </tr>
                                 </table>
@@ -784,6 +822,7 @@ class ExternalIntegrations
                                                 <option value="ahrefs" <?php selected($backlinkProvider, 'ahrefs'); ?>><?php esc_html_e('Ahrefs', 'ai-seo-client'); ?></option>
                                             </select>
                                             <p class="description"><?php esc_html_e('DataForSEO runs through the Portal proxy. Others use your own API keys configured above.', 'ai-seo-client'); ?></p>
+                                            <p class="description"><?php esc_html_e('Semrush is only used when it is the preferred provider (never as a fallback), because every backlink costs API units.', 'ai-seo-client'); ?></p>
                                         </td>
                                     </tr>
                                 </table>
@@ -793,6 +832,26 @@ class ExternalIntegrations
                             </div>
                         </div>
                         <script>
+                        (function() {
+                            var btn = document.getElementById('sseo-semrush-test');
+                            if (!btn) { return; }
+                            btn.addEventListener('click', function() {
+                                var out = document.getElementById('sseo-semrush-test-result');
+                                out.textContent = '<?php echo esc_js(__('Testing...', 'ai-seo-client')); ?>';
+                                out.style.color = '';
+                                var body = new URLSearchParams({action: 'sseo_ai_semrush_test', nonce: '<?php echo esc_js(wp_create_nonce('sseo_ai_semrush_test')); ?>'});
+                                fetch(ajaxurl, {method: 'POST', credentials: 'same-origin', body: body})
+                                    .then(function(r) { return r.json(); })
+                                    .then(function(res) {
+                                        out.textContent = (res.data && res.data.message) || '';
+                                        out.style.color = res.success ? '#00a32a' : '#d63638';
+                                    })
+                                    .catch(function() {
+                                        out.textContent = '<?php echo esc_js(__('Request failed.', 'ai-seo-client')); ?>';
+                                        out.style.color = '#d63638';
+                                    });
+                            });
+                        })();
                         function switchSerpTab(tab) {
                             document.querySelectorAll('.fyn-serp-tab').forEach(function(t) {
                                 t.classList.remove('active');
@@ -1619,6 +1678,32 @@ class ExternalIntegrations
     /**
      * AJAX: Save Google configuration (GA4 property ID, Ads customer ID, dev token)
      */
+    /**
+     * AJAX: test the saved Semrush key (free balance call).
+     */
+    public function ajaxTestSemrush(): void
+    {
+        check_ajax_referer('sseo_ai_semrush_test', 'nonce');
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized', 'ai-seo-client')], 403);
+        }
+
+        $client = SemrushClient::fromOptions();
+        if (!$client->isConfigured()) {
+            wp_send_json_error(['message' => __('Save a Semrush API key first.', 'ai-seo-client')]);
+        }
+
+        $balance = $client->getApiUnitsBalance();
+        if (is_wp_error($balance)) {
+            wp_send_json_error(['message' => $balance->get_error_message()]);
+        }
+
+        wp_send_json_success([
+            'message' => sprintf(__('Connected. API units left: %s', 'ai-seo-client'), number_format_i18n($balance)),
+            'balance' => $balance,
+        ]);
+    }
+
     public function ajaxSaveGoogleConfig(): void
     {
         check_ajax_referer('sseo_google_config', 'nonce');

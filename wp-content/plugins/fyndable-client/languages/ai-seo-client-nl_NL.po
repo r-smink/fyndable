@@ -8514,3 +8514,90 @@ msgstr "E-mail & rapporten beheren"
 
 msgid "Change or switch off these e-mails: %s"
 msgstr "Deze e-mails wijzigen of uitzetten: %s"
+
+msgid "Automatic (site language: %s)"
+msgstr "Automatisch (sitetaal: %s)"
+
+msgid "Configure your preferred SERP data provider. Only one is needed."
+msgstr "Stel je favoriete SERP-databron in. Eén is genoeg."
+
+msgid "Connected. API units left: %s"
+msgstr "Verbonden. Resterende API-units: %s"
+
+msgid "Country database used for search volumes, rankings and traffic."
+msgstr "Landendatabase voor zoekvolumes, posities en verkeer."
+
+msgid "DataForSEO API"
+msgstr "DataForSEO API"
+
+msgid "DataForSEO credentials are configured in the Portal settings. Backlink and SERP data is fetched automatically — no client-side API key required."
+msgstr "De DataForSEO-gegevens staan in de instellingen van het Portal. Backlink- en SERP-data worden automatisch opgehaald; je hebt hier geen eigen API-sleutel nodig."
+
+msgid "DataForSEO runs through the Portal proxy. Others use your own API keys configured above."
+msgstr "DataForSEO loopt via de Portal-proxy. De andere bronnen gebruiken je eigen API-sleutels hierboven."
+
+msgid "Find your API key in Semrush under Subscription info > API units. API access requires a Semrush Business plan with API units. The key is stored encrypted; save the settings before testing a new key."
+msgstr "Je API-sleutel staat in Semrush onder Subscription info > API units. API-toegang vraagt een Semrush Business-abonnement met API-units. De sleutel wordt versleuteld opgeslagen; sla de instellingen op voordat je een nieuwe sleutel test."
+
+msgid "Maximum Semrush API units this site may use per calendar month (0 = no limit). Results are cached for 24 hours."
+msgstr "Maximaal aantal Semrush API-units dat deze site per kalendermaand mag gebruiken (0 = geen limiet). Resultaten worden 24 uur bewaard."
+
+msgid "Monthly API unit budget"
+msgstr "Maandbudget API-units"
+
+msgid "Preferred Provider"
+msgstr "Voorkeursbron"
+
+msgid "Request failed."
+msgstr "Verzoek mislukt."
+
+msgid "SERP & Backlink APIs"
+msgstr "SERP- en backlink-API's"
+
+msgid "Save a Semrush API key first."
+msgstr "Sla eerst een Semrush API-sleutel op."
+
+msgid "Semrush API Key"
+msgstr "Semrush API-sleutel"
+
+msgid "Semrush API error %1$d: %2$s"
+msgstr "Semrush API-fout %1$d: %2$s"
+
+msgid "Semrush API error (HTTP %d)."
+msgstr "Semrush API-fout (HTTP %d)."
+
+msgid "Semrush API key not configured."
+msgstr "Er is geen Semrush API-sleutel ingesteld."
+
+msgid "Semrush database"
+msgstr "Semrush-database"
+
+msgid "Semrush has no data for this request."
+msgstr "Semrush heeft geen data voor dit verzoek."
+
+msgid "Semrush is only used when it is the preferred provider (never as a fallback), because every backlink costs API units."
+msgstr "Semrush wordt alleen gebruikt als het de voorkeursbron is (nooit als reserve), omdat elke backlink API-units kost."
+
+msgid "Test connection"
+msgstr "Verbinding testen"
+
+msgid "Testing..."
+msgstr "Bezig met testen..."
+
+msgid "The Semrush API key is invalid."
+msgstr "De Semrush API-sleutel is ongeldig."
+
+msgid "The Semrush API limit for this key is exceeded."
+msgstr "De Semrush API-limiet voor deze sleutel is bereikt."
+
+msgid "The Semrush API unit balance is zero. Buy API units in your Semrush account."
+msgstr "Het saldo aan Semrush API-units is 0. Koop API-units in je Semrush-account."
+
+msgid "The monthly Semrush API unit budget set in Integrations is reached. Raise the budget or wait until next month."
+msgstr "Het maandbudget voor Semrush API-units (Integraties) is bereikt. Verhoog het budget of wacht tot volgende maand."
+
+msgid "This Semrush account has no API access (a Business plan with API units is required)."
+msgstr "Dit Semrush-account heeft geen API-toegang (een Business-abonnement met API-units is nodig)."
+
+msgid "Used this month (estimate): %s units."
+msgstr "Deze maand gebruikt (schatting): %s units."

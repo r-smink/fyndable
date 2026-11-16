@@ -1661,6 +1661,16 @@ class ApiGateway
      */
     private function fetchSerpApi(string $apiKey, string $keyword, string $location, string $countryCode = '', string $languageCode = ''): array|\WP_Error
     {
+        $body = $this->fetchSerpApiBody($apiKey, $keyword, $location, $languageCode);
+
+        return is_wp_error($body) ? $body : ($body['organic_results'] ?? []);
+    }
+
+    /**
+     * Full SerpApi response (organic results, related searches, related questions).
+     */
+    private function fetchSerpApiBody(string $apiKey, string $keyword, string $location, string $languageCode = ''): array|\WP_Error
+    {
         $locale = $this->getSerpApiLocale($location);
 
         $url = add_query_arg(rawurlencode_deep([
@@ -1687,7 +1697,7 @@ class ApiGateway
             return new \WP_Error('serpapi_error', is_string($message) ? $message : json_encode($message));
         }
 
-        return $body['organic_results'] ?? [];
+        return is_array($body) ? $body : [];
     }
 
     /**
@@ -2244,60 +2254,44 @@ class ApiGateway
 
         // 1. SERP query to get related searches and People Also Ask
         $location = $this->countryToLocation($country) ?: 'United States';
-        $provider = $this->settings->getSerpApiProvider();
-        $apiKey = $this->settings->getSerpApiKey();
+        $related = $this->fetchRelatedKeywords($seed, $location, $country, $language);
 
-        $serpResult = $this->fetchSerpData($provider, $apiKey, $seed, $location, true, $country, $language);
-
-        $relatedKeywords = [];
-        if (!is_wp_error($serpResult)) {
-            // Extract related searches
-            foreach ($serpResult['related_searches'] ?? [] as $rs) {
-                $kw = $rs['query'] ?? $rs['keyword'] ?? $rs['text'] ?? '';
-                if ($kw !== '') $relatedKeywords[] = $kw;
+        // Seed first, then unique related keywords (case-insensitive), max 30.
+        $allKeywords = [$seed];
+        $seen = [mb_strtolower($seed) => true];
+        foreach ($related['keywords'] as $kw) {
+            $key = mb_strtolower($kw);
+            if (isset($seen[$key]) || count($allKeywords) > 30) {
+                continue;
             }
-            // Extract People Also Ask questions
-            foreach ($serpResult['people_also_ask'] ?? [] as $paa) {
-                $kw = $paa['question'] ?? $paa['text'] ?? '';
-                if ($kw !== '') $relatedKeywords[] = $kw;
-            }
+            $seen[$key] = true;
+            $allKeywords[] = $kw;
         }
 
-        $relatedKeywords = array_unique(array_slice($relatedKeywords, 0, 30));
-
-        // 2. Get search volume for seed + related keywords
-        $allKeywords = array_merge([$seed], $relatedKeywords);
-        $locationCode = $this->countryToLocationCode($country);
-        $volumeResult = $this->dataForSeoClient
-            ? $this->dataForSeoClient->aiKeywordDataSearchVolume([
-                'keywords' => array_slice($allKeywords, 0, 50),
-                'location_code' => $locationCode,
-                'language_code' => $language,
-            ])
-            : [];
-
-        // Build keyword list with volume data
+        // 2. Google search volume, CPC, competition and difficulty for seed + related keywords
         $volumeMap = [];
-        if (!is_wp_error($volumeResult)) {
-            foreach ($volumeResult['data'] ?? $volumeResult as $item) {
-                $kw = $item['keyword'] ?? '';
-                if ($kw !== '') $volumeMap[strtolower($kw)] = $item;
+        $volumeCost = 0.0;
+        if ($this->dataForSeoClient && $this->dataForSeoClient->isConfigured()) {
+            $volumeResult = $this->dataForSeoClient->keywordOverviewLive($allKeywords, $this->countryToLocationCode($country), $language);
+            if (!is_wp_error($volumeResult)) {
+                $volumeMap = $volumeResult;
+                $volumeCost = DataForSeoClient::PRICING['keyword_overview'] + 0.0001 * count($allKeywords);
             }
         }
 
         $keywords = [];
         foreach ($allKeywords as $kw) {
-            $data = $volumeMap[strtolower($kw)] ?? [];
+            $data = $volumeMap[mb_strtolower($kw)] ?? [];
             $keywords[] = [
                 'keyword' => $kw,
-                'search_volume' => $data['search_volume'] ?? $data['volume'] ?? null,
+                'search_volume' => $data['search_volume'] ?? null,
                 'cpc' => $data['cpc'] ?? null,
-                'difficulty' => $data['keyword_difficulty'] ?? $data['difficulty'] ?? null,
+                'difficulty' => $data['difficulty'] ?? null,
                 'competition' => $data['competition'] ?? null,
             ];
         }
 
-        $cost = 0.002 + (empty($volumeResult) ? 0 : 0.002);
+        $cost = ($related['provider'] !== '' ? (self::SERP_PRICING[$related['provider']] ?? 0.005) : 0) + $volumeCost;
         $this->trackUsage($tenant, 'serp_query', 1, $cost);
 
         return new \WP_REST_Response([
@@ -2305,6 +2299,77 @@ class ApiGateway
             'seed' => $seed,
             'keywords' => $keywords,
         ]);
+    }
+
+    /**
+     * Related searches and "People also ask" questions for a keyword.
+     *
+     * The organic helpers (fetchSerpData) only return result rows, so this reads the
+     * related blocks itself: DataForSEO items of type related_searches / people_also_ask,
+     * SerpApi related_searches / related_questions. SE Ranking has no such data.
+     *
+     * @return array{keywords: string[], provider: string} provider = '' when no request succeeded
+     */
+    private function fetchRelatedKeywords(string $seed, string $location, string $country, string $language): array
+    {
+        $configured = $this->settings->getSerpApiProvider();
+        $providers = array_values(array_unique(array_merge([$configured], ['dataforseo', 'serpapi'])));
+
+        foreach ($providers as $provider) {
+            if (!in_array($provider, ['dataforseo', 'serpapi'], true) || $this->isProviderCircuitOpen($provider)) {
+                continue;
+            }
+            $apiKey = $this->getProviderApiKey($provider, $this->settings->getSerpApiKey());
+
+            $keywords = [];
+            if ($provider === 'dataforseo') {
+                $items = $this->fetchDataForSeo($apiKey, $seed, $location, $country, $language);
+                if (!is_wp_error($items)) {
+                    foreach ($items as $item) {
+                        $type = is_array($item) ? ($item['type'] ?? '') : '';
+                        if ($type === 'related_searches') {
+                            foreach ($item['items'] ?? [] as $rs) {
+                                $keywords[] = is_array($rs) ? ($rs['title'] ?? $rs['query'] ?? '') : $rs;
+                            }
+                        } elseif ($type === 'people_also_ask') {
+                            foreach ($item['items'] ?? [] as $paa) {
+                                $keywords[] = $paa['title'] ?? '';
+                            }
+                        }
+                    }
+                }
+                $failed = is_wp_error($items);
+            } else {
+                if ($apiKey === '') {
+                    continue;
+                }
+                $body = $this->fetchSerpApiBody($apiKey, $seed, $location, $language);
+                if (!is_wp_error($body)) {
+                    foreach ($body['related_searches'] ?? [] as $rs) {
+                        $keywords[] = $rs['query'] ?? '';
+                    }
+                    foreach ($body['related_questions'] ?? [] as $paa) {
+                        $keywords[] = $paa['question'] ?? '';
+                    }
+                }
+                $failed = is_wp_error($body);
+            }
+
+            if ($failed) {
+                $this->recordProviderFailure($provider);
+                continue;
+            }
+            $this->recordProviderSuccess($provider);
+
+            $keywords = array_values(array_filter(array_map(
+                static fn($kw) => sanitize_text_field(is_string($kw) ? $kw : ''),
+                $keywords
+            ), static fn($kw) => $kw !== ''));
+
+            return ['keywords' => $keywords, 'provider' => $provider];
+        }
+
+        return ['keywords' => [], 'provider' => ''];
     }
 
     /**
@@ -2337,14 +2402,31 @@ class ApiGateway
 
         // Simple Jaccard-based clustering using SERP overlap
         // For each keyword, get top 10 SERP results, then cluster by URL overlap
+        $country = sanitize_text_field($body['country'] ?? 'us');
+        $language = sanitize_text_field($body['language'] ?? 'en');
+        if (function_exists('set_time_limit')) {
+            @set_time_limit(600); // up to 20 live SERP requests
+        }
+
         $serpResults = [];
+        $serpCost = 0.0;
         foreach (array_slice($keywords, 0, 20) as $kw) {
-            $serp = $this->handleSerpQueryInternal($kw, $body['country'] ?? 'us', $body['language'] ?? 'en');
-            $urls = [];
-            foreach (($serp['organic_results'] ?? $serp['results'] ?? []) as $r) {
-                $urls[] = parse_url($r['url'] ?? $r['link'] ?? '', PHP_URL_HOST);
+            $serp = $this->handleSerpQueryInternal($kw, $country, $language);
+            if (isset($serp['_provider'])) {
+                $serpCost += self::SERP_PRICING[$serp['_provider']] ?? 0.005;
             }
-            $serpResults[$kw] = array_filter($urls);
+            $hosts = [];
+            foreach ($serp as $r) {
+                // Rows only (skips "_provider"); DataForSEO mixes in non-organic items.
+                if (!is_array($r) || ($r['type'] ?? 'organic') !== 'organic') {
+                    continue;
+                }
+                $host = $this->resultHost($r);
+                if ($host !== '') {
+                    $hosts[] = $host;
+                }
+            }
+            $serpResults[$kw] = array_slice(array_values(array_unique($hosts)), 0, 10);
         }
 
         // Build Jaccard similarity matrix and cluster
@@ -2376,7 +2458,7 @@ class ApiGateway
 
         $tenantKey = $request->get_header('X-Tenant-Key') ?? $request->get_param('tenant_key');
         $tenant = $this->tenants->getTenant($tenantKey);
-        $this->trackUsage($tenant, 'serp_query', count($serpResults), 0.002 * count($serpResults));
+        $this->trackUsage($tenant, 'serp_query', count($serpResults), $serpCost);
 
         return new \WP_REST_Response([
             'success' => true,
@@ -2387,16 +2469,50 @@ class ApiGateway
     }
 
     /**
+     * Host of an organic result row, without "www.".
+     *
+     * Google wraps result links as google.com/goto?url=<encrypted>, so the provider's
+     * domain field (DataForSEO "domain", SerpApi "displayed_link") goes first and a
+     * google.* host from the link itself never counts.
+     */
+    private function resultHost(array $row): string
+    {
+        $candidates = [
+            (string) ($row['domain'] ?? ''),
+            (string) strtok((string) ($row['displayed_link'] ?? ''), ' '),
+            (string) ($row['url'] ?? $row['link'] ?? ''),
+        ];
+        foreach ($candidates as $candidate) {
+            if ($candidate === '') {
+                continue;
+            }
+            $host = parse_url(str_contains($candidate, '://') ? $candidate : 'https://' . $candidate, PHP_URL_HOST);
+            $host = strtolower((string) preg_replace('/^www\./i', '', (string) $host));
+            if ($host !== '' && str_contains($host, '.') && !preg_match('/(^|\.)google\.[a-z.]+$/', $host)) {
+                return $host;
+            }
+        }
+
+        return '';
+    }
+
+    /**
      * Internal SERP query helper (no HTTP, direct call).
      */
     private function handleSerpQueryInternal(string $keyword, string $country = 'us', string $language = 'en'): array
     {
-        if (!$this->dataForSeoClient) {
-            return [];
-        }
+        // Was a call to a non-existent DataForSeoClient::serpQuery(), which made
+        // keywords/cluster fail with a fatal error on every request.
+        $result = $this->fetchSerpData(
+            $this->settings->getSerpApiProvider(),
+            $this->settings->getSerpApiKey(),
+            $keyword,
+            $this->countryToLocation($country) ?: 'United States',
+            true,
+            $country,
+            $language
+        );
 
-        $result = $this->dataForSeoClient->serpQuery($keyword, $country, $language);
-
-        return is_array($result) ? $result : [];
+        return is_wp_error($result) ? [] : $result;
     }
 }

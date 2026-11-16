@@ -25,6 +25,8 @@ class BacklinkAnalyzer
     private const MAX_COMPETITORS = 5;
     /** DataForSEO backlink_spam_score (0-100) from which a link counts as toxic. */
     private const SPAM_SCORE_TOXIC = 50;
+    /** Semrush charges 40 API units per backlink line. */
+    private const SEMRUSH_BACKLINK_LIMIT = 100;
 
     public function __construct(Settings $settings, ?DashboardAPI $dashboardAPI = null)
     {
@@ -607,7 +609,9 @@ class BacklinkAnalyzer
     private function getProviderChain(): array
     {
         $primary = get_option('sseo_ai_backlink_provider', 'dataforseo');
-        $all = ['dataforseo', 'ahrefs', 'seranking', 'semrush'];
+        // Semrush costs the customer API units per line, so it is only used
+        // when explicitly chosen as the primary provider, never as fallback.
+        $all = ['dataforseo', 'ahrefs', 'seranking'];
         $chain = [$primary];
         foreach ($all as $p) {
             if ($p !== $primary) {
@@ -723,100 +727,51 @@ class BacklinkAnalyzer
     }
     
     /**
-     * Semrush API integration
+     * Semrush: Authority Score + referring domains (backlinks_overview, 40 units)
+     * and organic keywords/traffic (domain_rank, 10 units). Customer's own key.
      */
     private function getSemrushDomainMetrics(string $domain): array
     {
-        $apiKey = get_option('sseo_ai_semrush_api_key', '');
-        if (empty($apiKey)) {
+        $client = SemrushClient::fromOptions();
+        if (!$client->isConfigured()) {
             return $this->getDefaultMetrics();
         }
-        
-        $response = wp_remote_get("https://api.semrush.com/?type=domain_ranks&key={$apiKey}&export_columns=Dn,Rk,Or,Ot,Oc&domain={$domain}", [
-            'timeout' => 30,
-        ]);
-        
-        if (is_wp_error($response)) {
+
+        $backlinks = $client->getBacklinksOverview($domain);
+        if (is_wp_error($backlinks)) {
             return $this->getDefaultMetrics();
         }
-        
-        $body = wp_remote_retrieve_body($response);
-        $lines = explode("\n", trim($body));
-        
-        if (count($lines) < 2) {
-            return $this->getDefaultMetrics();
-        }
-        
-        $data = str_getcsv($lines[1], ';');
-        
+
+        $organic = $client->getDomainOverview($domain);
+
         return [
-            'domain_rating' => (int)($data[1] ?? 0),
-            'referring_domains' => 0, // Semrush doesn't provide this in basic API
-            'backlinks' => 0,
-            'organic_traffic' => (int)($data[2] ?? 0),
-            'organic_keywords' => (int)($data[3] ?? 0),
+            'domain_rating'     => $backlinks['authority_score'],
+            'referring_domains' => $backlinks['referring_domains'],
+            'backlinks'         => $backlinks['backlinks'],
+            'organic_traffic'   => is_wp_error($organic) ? 0 : $organic['organic_traffic'],
+            'organic_keywords'  => is_wp_error($organic) ? 0 : $organic['organic_keywords'],
         ];
     }
-    
+
     /**
-     * Get Semrush backlinks
+     * Semrush backlinks (top SEMRUSH_BACKLINK_LIMIT by page Authority Score;
+     * 40 API units per link, so deliberately smaller than other providers).
      */
     private function getSemrushBacklinks(string $domain): array
     {
-        $apiKey = get_option('sseo_ai_semrush_api_key', '');
-        if (empty($apiKey)) {
+        $client = SemrushClient::fromOptions();
+        if (!$client->isConfigured()) {
             return $this->getDefaultBacklinkProfile();
         }
-        
-        $response = wp_remote_get("https://api.semrush.com/?type=backlinks&key={$apiKey}&target={$domain}&target_type=root_domain&display_limit=1000", [
-            'timeout' => 30,
-        ]);
-        
-        if (is_wp_error($response)) {
+
+        $items = $client->getBacklinks($domain, self::SEMRUSH_BACKLINK_LIMIT);
+        if (is_wp_error($items)) {
             return $this->getDefaultBacklinkProfile();
         }
-        
-        $body = wp_remote_retrieve_body($response);
-        $lines = explode("\n", trim($body));
-        
-        $dofollow = 0;
-        $nofollow = 0;
-        $anchors = [];
-        
-        foreach (array_slice($lines, 1) as $line) {
-            $data = str_getcsv($line, ';');
-            if (count($data) < 5) continue;
-            
-            $type = $data[4] ?? '';
-            if ($type === 'text') {
-                $dofollow++;
-            } else {
-                $nofollow++;
-            }
-            
-            $anchor = $data[3] ?? '';
-            if (!empty($anchor)) {
-                if (!isset($anchors[$anchor])) {
-                    $anchors[$anchor] = 0;
-                }
-                $anchors[$anchor]++;
-            }
-        }
-        
-        arsort($anchors);
-        $topAnchors = [];
-        foreach (array_slice($anchors, 0, 10, true) as $text => $count) {
-            $topAnchors[] = ['text' => $text, 'count' => $count];
-        }
-        
-        return [
-            'dofollow' => $dofollow,
-            'nofollow' => $nofollow,
-            'redirect' => 0,
-            'top_anchors' => $topAnchors,
-        ];
+
+        return $this->buildProfile(array_map([$this, 'normalizeLink'], $items));
     }
-    
+
     /**
      * DataForSEO domain metrics.
      *
@@ -1040,8 +995,8 @@ class BacklinkAnalyzer
      * Detect toxic links using backlink profile items.
      *
      * Score (0-100) = DataForSEO backlink_spam_score, plus penalties for
-     * spam-vertical anchors and near-zero authority sources. Providers that
-     * don't return per-link items (Semrush) yield no toxic list.
+     * spam-vertical anchors and near-zero authority sources. Providers without
+     * a spam score (Ahrefs, SE Ranking, Semrush) only get the anchor/authority checks.
      */
     public function getToxicLinks(string $domain): array
     {

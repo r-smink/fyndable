@@ -863,6 +863,7 @@ class LicenseAPI
 
         // Generate license key for trial
         $licenseResult = $this->licenseGenerator->generateLicense([
+            'type' => 'trial', // was stored as "paid" (the generator's default)
             'tier' => 'trial',
             'name' => $name,
         ]);

@@ -743,7 +743,9 @@ class SupportTickets
 
     private function getSupportEmail(): string
     {
-        return get_option('ai_seo_saas_support_email', get_option('admin_email'));
+        $email = trim((string) get_option('ai_seo_saas_support_email', ''));
+
+        return $email !== '' ? $email : (string) get_option('admin_email');
     }
 
     private function sendNewTicketNotification(array $tenant, int $ticketId, string $subject, string $message): void

@@ -95,7 +95,7 @@ Nederlandse voiceover-teksten voor de begeleide salesdemo-tour van de Fyndable D
 ### Stap 11 — `step-11-clusters-generate.mp3` — Reviewen & bulk-genereren
 *Scherm: Topic Clusters → review-sectie*
 
-> Van plan naar publicatie. Klik "Review All Pages", selecteer welke pagina's je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.
+> Van plan naar publicatie. Klik "View All Pages", selecteer welke pagina's je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.
 
 ### Stap 12 — `step-12-calendar-grid.mp3` — Visuele publicatiekalender
 *Scherm: Content Calendar → kalender*
@@ -105,7 +105,7 @@ Nederlandse voiceover-teksten voor de begeleide salesdemo-tour van de Fyndable D
 ### Stap 13 — `step-13-calendar-workflow.mp3` — Content gaps & workflow
 *Scherm: Content Calendar → rechterkolom*
 
-> Rechts zie je de operationele sturing. De Content Gap Calendar wijst dagen aan zonder content — één klik op "Fill Gap" vult ze. De vier statuskaarten tonen waar content in de pijplijn zit: drafts, pending review, gepland en gepubliceerd. En onder Pending Approvals keurt het team ingediende stukken goed of af. Volledig onderaan vind je de Keyword Opportunity Timeline met voorstellen op datum.
+> Rechts zie je de operationele sturing. De Content Gap Calendar wijst dagen aan zonder content — één klik op "Fill Gap" vult ze. De vier statuskaarten tonen waar content in de pijplijn zit: drafts, pending review, gepland en gepubliceerd. En onder Pending Approval keurt het team ingediende stukken goed of af. Volledig onderaan vind je de Keyword Opportunity Timeline met voorstellen op datum.
 
 ### Stap 14 — `step-14-apexflow-profile.mp3` — Site-profiel & context
 *Scherm: ApexFlow → profielvelden*
@@ -120,7 +120,7 @@ Nederlandse voiceover-teksten voor de begeleide salesdemo-tour van de Fyndable D
 ### Stap 16 — `step-16-apexflow-pool.mp3` — Keyword pool & geplande posts
 *Scherm: ApexFlow → pool & planning*
 
-> ApexFlow bouwt een keyword pool van maximaal twintig kandidaten uit SERP-data, volumes en lokale intentie — het pinnetje betekent lokaal zoekgedrag. Met "Preview Calendar" doe je een droge run; met "Reject" schuif je een keyword naar de uitsluitingen. Onderaan staat het plan: welke post, welke dag, welk zoekwoord. "Run ApexFlow Now" forceert meteen een run.
+> ApexFlow bouwt een keyword pool van maximaal twintig kandidaten uit SERP-data, volumes en lokale intentie — het pinnetje betekent lokaal zoekgedrag. Met "Calendar Preview" doe je een droge run; met "Reject" schuif je een keyword naar de uitsluitingen. Onderaan staat het plan: welke post, welke dag, welk zoekwoord. "Run ApexFlow Now" forceert meteen een run.
 
 ### Stap 17 — `step-17-rank-national.mp3` — Landelijke posities volgen
 *Scherm: Rank Tracker → tabel*

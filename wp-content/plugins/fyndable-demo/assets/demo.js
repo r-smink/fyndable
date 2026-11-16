@@ -25,7 +25,7 @@
     }
 
     function shellReady() {
-        frame = document.getElementById('fyndable-frame');
+        frame = document.getElementById('fyn-frame') || document.getElementById('fyndable-frame');
         return !!frame;
     }
 
@@ -260,7 +260,8 @@
     }
 
     function navigate(slug, done) {
-        var link = document.querySelector('.fyndable-sidebar-nav a[data-slug="' + cssEscape(slug) + '"]');
+        var sel = 'a[data-slug="' + cssEscape(slug) + '"]';
+        var link = document.querySelector('.fyn-sidebar-nav ' + sel) || document.querySelector('.fyndable-sidebar-nav ' + sel);
         if (!frame || !link) {
             done();
             return;

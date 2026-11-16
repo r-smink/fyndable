@@ -421,19 +421,22 @@ class EmailTemplateAdmin
                     $testError = __('Could not send test email. Check the address and template.', 'sseo-ai-saas');
                 }
             } elseif (check_admin_referer('sseo_ai_email_template_edit')) {
+                // WordPress adds slashes to $_POST; without wp_unslash() every save stored
+                // one more backslash before each quote ("You\'re") in the template.
+                $post = wp_unslash($_POST);
                 $data = [
                     'template_key' => $templateKey,
-                    'name' => sanitize_text_field($_POST['name'] ?? $template['name']),
-                    'subject' => sanitize_text_field($_POST['subject'] ?? $template['subject']),
-                    'body_html' => wp_kses_post($_POST['body_html'] ?? ''),
-                    'body_blocks' => $_POST['body_blocks_json'] ?? null,
-                    'layout' => sanitize_key($_POST['layout'] ?? 'default'),
-                    'brand_logo' => esc_url_raw($_POST['brand_logo'] ?? ''),
-                    'primary_color' => sanitize_hex_color($_POST['primary_color'] ?? '#379fd3'),
-                    'secondary_color' => sanitize_hex_color($_POST['secondary_color'] ?? '#8f39ac'),
-                    'button_color' => sanitize_hex_color($_POST['button_color'] ?? ''),
-                    'footer_text' => sanitize_textarea_field($_POST['footer_text'] ?? ''),
-                    'is_active' => !empty($_POST['is_active']),
+                    'name' => sanitize_text_field($post['name'] ?? $template['name']),
+                    'subject' => sanitize_text_field($post['subject'] ?? $template['subject']),
+                    'body_html' => wp_kses_post($post['body_html'] ?? ''),
+                    'body_blocks' => $post['body_blocks_json'] ?? null,
+                    'layout' => sanitize_key($post['layout'] ?? 'default'),
+                    'brand_logo' => esc_url_raw($post['brand_logo'] ?? ''),
+                    'primary_color' => sanitize_hex_color($post['primary_color'] ?? '#379fd3'),
+                    'secondary_color' => sanitize_hex_color($post['secondary_color'] ?? '#8f39ac'),
+                    'button_color' => sanitize_hex_color($post['button_color'] ?? ''),
+                    'footer_text' => sanitize_textarea_field($post['footer_text'] ?? ''),
+                    'is_active' => !empty($post['is_active']),
                 ];
                 $this->repository->saveTemplate($data);
                 $template = $this->repository->getTemplate($templateKey);
@@ -775,8 +778,8 @@ class EmailTemplateAdmin
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && check_admin_referer('sseo_ai_email_layout_edit')) {
             $slug = sanitize_key($_POST['layout_slug'] ?? $layoutKey);
-            $name = sanitize_text_field($_POST['layout_name'] ?? '');
-            $html = wp_kses_post($_POST['layout_html'] ?? '');
+            $name = sanitize_text_field(wp_unslash($_POST['layout_name'] ?? ''));
+            $html = wp_kses_post(wp_unslash($_POST['layout_html'] ?? ''));
 
             if (!empty($slug) && !in_array($slug, $builtIn, true)) {
                 $this->repository->saveLayout($slug, ['name' => $name, 'html' => $html]);

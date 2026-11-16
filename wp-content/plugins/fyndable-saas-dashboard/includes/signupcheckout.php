@@ -227,7 +227,7 @@ class SignupCheckout
                 'self_serve' => $selfServe,
                 'contact_url' => $selfServe
                     ? ''
-                    : 'mailto:' . get_option('ai_seo_saas_support_email', get_option('admin_email')),
+                    : 'mailto:' . (get_option('ai_seo_saas_support_email', '') ?: get_option('admin_email')),
                 'intervals' => [
                     'month' => [
                         'price' => $monthlyAmount,
@@ -405,7 +405,9 @@ class SignupCheckout
         return new \WP_REST_Response([
             'success' => true,
             'tenant_key' => $tenantKey,
-            'license_key' => $licenseKey,
+            // SECURITY: never hand out the key before payment; it is emailed after
+            // the payment (sseo_ai_payment_success). signup.js only uses it without checkout_url.
+            'license_key' => '',
             'requires_payment' => true,
             'checkout_url' => $checkoutResult['checkout_url'] ?? '',
             'payment_data' => $checkoutResult,
@@ -526,7 +528,9 @@ class SignupCheckout
         return new \WP_REST_Response([
             'success' => true,
             'tenant_key' => $tenantKey,
-            'license_key' => $licenseKey,
+            // SECURITY: never hand out the key before payment; it is emailed after
+            // the payment (sseo_ai_payment_success). signup.js only uses it without checkout_url.
+            'license_key' => '',
             'requires_payment' => true,
             'checkout_url' => $checkoutResult['checkout_url'] ?? '',
             'payment_data' => $checkoutResult,

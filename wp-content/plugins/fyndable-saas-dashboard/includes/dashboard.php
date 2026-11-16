@@ -268,6 +268,7 @@ class Dashboard
         $this->tenants->migrateExistingTables();
         $this->geoScanRepository->maybeCreateTables();
         $this->emailTemplateRepository->maybeCreateTables();
+        $this->emailTemplateRepository->repairSlashedTemplates();
         $this->feedback->maybeCreateTable();
         update_option(self::DB_VERSION_OPTION, SSEO_AI_SAAS_VERSION, true);
     }

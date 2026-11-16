@@ -36,6 +36,7 @@ class DataForSeoClient
         'google_trends'  => 0.002,
         'dfs_trends'     => 0.002,
         'backlinks'      => 0.005,
+        'keyword_overview' => 0.01,
     ];
 
     private SaaSSettings $settings;
@@ -264,11 +265,48 @@ class DataForSeoClient
 
     /**
      * Get AI keyword search volume.
-     * Endpoint: /v3/ai_optimization/ai_keyword_data/search_volume/live
+     * Endpoint: /v3/ai_optimization/ai_keyword_data/keywords_search_volume/live
+     * Items: keyword, ai_search_volume, ai_monthly_searches[].
      */
     public function aiKeywordDataSearchVolume(array $params): array|\WP_Error
     {
-        return $this->request('/ai_optimization/ai_keyword_data/search_volume/live', [$params], 'ai_keyword');
+        return $this->request('/ai_optimization/ai_keyword_data/keywords_search_volume/live', [$params], 'ai_keyword');
+    }
+
+    /**
+     * Google search volume, CPC, competition and keyword difficulty for up to 700 keywords.
+     * Endpoint: /v3/dataforseo_labs/google/keyword_overview/live
+     *
+     * @return array|\WP_Error Map of lowercase keyword => [search_volume, cpc, competition, difficulty]
+     */
+    public function keywordOverviewLive(array $keywords, int $locationCode, string $languageCode): array|\WP_Error
+    {
+        $result = $this->request('/dataforseo_labs/google/keyword_overview/live', [[
+            'keywords'      => array_values(array_slice($keywords, 0, 700)),
+            'location_code' => $locationCode,
+            'language_code' => $languageCode,
+        ]], 'keyword_overview');
+
+        if (is_wp_error($result)) {
+            return $result;
+        }
+
+        $map = [];
+        foreach ($result['tasks'][0]['result'][0]['items'] ?? [] as $item) {
+            $keyword = is_array($item) ? (string) ($item['keyword'] ?? '') : '';
+            if ($keyword === '') {
+                continue;
+            }
+            $info = $item['keyword_info'] ?? [];
+            $map[mb_strtolower($keyword)] = [
+                'search_volume' => $info['search_volume'] ?? null,
+                'cpc'           => $info['cpc'] ?? null,
+                'competition'   => $info['competition'] ?? null,
+                'difficulty'    => $item['keyword_properties']['keyword_difficulty'] ?? null,
+            ];
+        }
+
+        return $map;
     }
 
     // -------------------------------------------------------------------------

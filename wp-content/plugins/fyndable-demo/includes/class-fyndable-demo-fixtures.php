@@ -472,18 +472,18 @@ final class Fyndable_Demo_Fixtures
                 'title' => 'Reviewen & bulk-genereren',
                 'what' => 'Van plan naar publicatie: review alle pagina’s, selecteer welke je wilt genereren en zet ze in bulk om naar drafts of geplande posts — inclusief interne linkstrategie en kalendersync.',
                 'how' => [
-                    'Klik "Review All Pages" om de paginatabel te openen.',
+                    'Klik "View All Pages" om de paginatabel te openen.',
                     'Selecteer pagina’s en klik "Generate Selected" — content wordt via WP-Cron op de achtergrond geschreven.',
                     'Met "Sync to Content Calendar" plan je de hele map op startdatum + interval.',
                 ],
                 'tip' => 'De geschatte API-kosten staan erbij — je weet vooraf wat een bulk-run kost.',
                 'audio' => $a('step-11-clusters-generate'),
-                'voiceover' => 'Van plan naar publicatie. Klik "Review All Pages", selecteer welke pagina\'s je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.',
+                'voiceover' => 'Van plan naar publicatie. Klik "View All Pages", selecteer welke pagina\'s je wilt schrijven en klik "Generate Selected". De content wordt op de achtergrond via WP-Cron geschreven — je kunt de pagina gewoon sluiten. Met "Sync to Content Calendar" plan je de hele map automatisch op basis van startdatum en interval. De geschatte API-kosten zie je vooraf.',
             ],
             // 5. Content Calendar
             [
                 'id' => 'step-12-calendar-grid', 'slug' => 'ai-seo-content-calendar',
-                'selector' => '.sseo-calendar', 'section' => 'Contentplanning', 'substep' => '1/2',
+                'selector' => '.fyn-cal-columns > .fyn-card:first-child', 'section' => 'Contentplanning', 'substep' => '1/2',
                 'title' => 'Visuele publicatiekalender',
                 'what' => 'Een maandoverzicht van alle content: gepubliceerd, gepland, concepten en ter review. Concepten en geplande posts zijn versleepbaar.',
                 'how' => [
@@ -497,18 +497,18 @@ final class Fyndable_Demo_Fixtures
             ],
             [
                 'id' => 'step-13-calendar-workflow', 'slug' => 'ai-seo-content-calendar',
-                'selector' => '.sseo-two-columns > div:last-child', 'section' => 'Contentplanning', 'substep' => '2/2',
+                'selector' => '.fyn-cal-columns > div:last-child', 'section' => 'Contentplanning', 'substep' => '2/2',
                 'title' => 'Content gaps & workflow',
                 'what' => 'Rechts staat de operationele sturing: gedetecteerde gaten in de planning, de workflow-status (drafts → review → gepland → gepubliceerd) en wachtende goedkeuringen.',
                 'how' => [
                     'Klik "Fill Gap" bij een gemiste dag om die met content te vullen.',
                     'De vier statuskaarten tonen waar content in de pijplijn vastzit.',
-                    'Onder "Pending Approvals" keurt of weigert het team ingediende stukken.',
+                    'Onder "Pending Approval" keurt of weigert het team ingediende stukken.',
                     'Helemaal onderaan: de Keyword Opportunity Timeline met voorstellen op datum.',
                 ],
                 'tip' => 'Combineer met ApexFlow: de autopilot vult gaten automatisch, deze kalender houdt je in controle.',
                 'audio' => $a('step-13-calendar-workflow'),
-                'voiceover' => 'Rechts zie je de operationele sturing. De Content Gap Calendar wijst dagen aan zonder content — één klik op "Fill Gap" vult ze. De vier statuskaarten tonen waar content in de pijplijn zit: drafts, pending review, gepland en gepubliceerd. En onder Pending Approvals keurt het team ingediende stukken goed of af. Volledig onderaan vind je de Keyword Opportunity Timeline met voorstellen op datum.',
+                'voiceover' => 'Rechts zie je de operationele sturing. De Content Gap Calendar wijst dagen aan zonder content — één klik op "Fill Gap" vult ze. De vier statuskaarten tonen waar content in de pijplijn zit: drafts, pending review, gepland en gepubliceerd. En onder Pending Approval keurt het team ingediende stukken goed of af. Volledig onderaan vind je de Keyword Opportunity Timeline met voorstellen op datum.',
             ],
             // 6. ApexFlow
             [
@@ -547,14 +547,14 @@ final class Fyndable_Demo_Fixtures
                 'title' => 'Keyword pool & geplande posts',
                 'what' => 'ApexFlow bouwt een keyword pool van max. 20 kandidaten uit SERP-data, volumes en lokale intentie — en vertaalt die naar geplande posts op vrije kalenderslots.',
                 'how' => [
-                    '"Preview Calendar" toont een droge run zonder iets te plannen.',
+                    '"Calendar Preview" toont een droge run zonder iets te plannen.',
                     'Wees een keyword af via "Reject" — het verdwijnt naar excluded topics.',
                     '"Refresh Pool Now" herbouwt de pool direct (verbruikt SERP/AI-credits).',
                     '"Run ApexFlow Now" forceert een run buiten het wekelijkse schema.',
                 ],
                 'tip' => 'Het pinnetjes-icoon bij een keyword betekent lokale intentie — relevant als Local Business-coördinaten zijn ingesteld.',
                 'audio' => $a('step-16-apexflow-pool'),
-                'voiceover' => 'ApexFlow bouwt een keyword pool van maximaal twintig kandidaten uit SERP-data, volumes en lokale intentie — het pinnetje betekent lokaal zoekgedrag. Met "Preview Calendar" doe je een droge run; met "Reject" schuif je een keyword naar de uitsluitingen. Onderaan staat het plan: welke post, welke dag, welk zoekwoord. "Run ApexFlow Now" forceert meteen een run.',
+                'voiceover' => 'ApexFlow bouwt een keyword pool van maximaal twintig kandidaten uit SERP-data, volumes en lokale intentie — het pinnetje betekent lokaal zoekgedrag. Met "Calendar Preview" doe je een droge run; met "Reject" schuif je een keyword naar de uitsluitingen. Onderaan staat het plan: welke post, welke dag, welk zoekwoord. "Run ApexFlow Now" forceert meteen een run.',
             ],
             // 7. Rank Tracker
             [
@@ -603,7 +603,7 @@ final class Fyndable_Demo_Fixtures
             ],
             [
                 'id' => 'step-20-llm-results', 'slug' => 'ai-seo-llm-tracker',
-                'selector' => '.sseo-ai-content', 'section' => 'AI-zichtbaarheid', 'substep' => '2/2',
+                'selector' => '.bv-period-tabs', 'section' => 'AI-zichtbaarheid', 'substep' => '2/2',
                 'title' => 'Visibility score & sentiment',
                 'what' => 'Na een scan zie je de Visibility Score (in hoeveel procent van de antwoorden wordt je merk genoemd), het aantal vermeldingen, gemiddelde positie, sentiment en een platform- en concurrentievergelijking.',
                 'how' => [

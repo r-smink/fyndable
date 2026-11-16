@@ -284,6 +284,34 @@ class EmailTemplateRepository
     }
 
     /**
+     * Remove the backslashes that earlier saves stored before quotes ("You\\\'re").
+     * The edit form did not unslash $_POST until 1.11.12. Runs from the schema upgrade.
+     */
+    public function repairSlashedTemplates(): int
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . self::TABLE;
+        $rows = $wpdb->get_results("SELECT id, name, subject, body_html, footer_text FROM {$table}", ARRAY_A);
+
+        $repaired = 0;
+        foreach ($rows ?: [] as $row) {
+            $update = [];
+            foreach (['name', 'subject', 'body_html', 'footer_text'] as $field) {
+                $value = (string) ($row[$field] ?? '');
+                $clean = preg_replace('/\\\\+([\'"])/', '$1', $value);
+                if (is_string($clean) && $clean !== $value) {
+                    $update[$field] = $clean;
+                }
+            }
+            if ($update && false !== $wpdb->update($table, $update, ['id' => (int) $row['id']])) {
+                $repaired++;
+            }
+        }
+
+        return $repaired;
+    }
+
+    /**
      * Save or update a template.
      */
     public function saveTemplate(array $data): bool

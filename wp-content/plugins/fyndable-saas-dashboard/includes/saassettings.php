@@ -460,7 +460,11 @@ class SaaSSettings
      */
     public function getSupportEmail(): string
     {
-        return get_option('ai_seo_saas_support_email', get_option('admin_email'));
+        // The option exists but is empty when the field was saved blank; the default of
+        // get_option() only covers a missing option, so fall back explicitly.
+        $email = trim((string) get_option('ai_seo_saas_support_email', ''));
+
+        return $email !== '' ? $email : (string) get_option('admin_email');
     }
 
     /**

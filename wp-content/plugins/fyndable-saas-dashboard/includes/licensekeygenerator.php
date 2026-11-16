@@ -183,7 +183,15 @@ class LicenseKeyGenerator
         
         // Check if this is a re-activation of the same site
         $existingTenant = $this->tenants->getTenantByLicense($licenseKey);
-        
+
+        // SECURITY: a signup still waiting for its first payment must not become
+        // active through license activation. Such a tenant is stored with status
+        // 'pending_payment', which is not in the status enum, so MySQL stores ''.
+        // Activation follows only after the payment (webhook / payment return).
+        if ($existingTenant && in_array((string) ($existingTenant['status'] ?? ''), ['', 'pending_payment'], true)) {
+            return new \WP_Error('payment_pending', __('The payment for this license has not been completed yet.', 'sseo-ai-saas'));
+        }
+
         if ($existingTenant) {
             // Re-activation - restore to active, update last active, domain, name and metadata
             $metadata = is_array($existingTenant['metadata'] ?? null) ? $existingTenant['metadata'] : [];
